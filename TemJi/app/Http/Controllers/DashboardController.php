@@ -9,24 +9,28 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // Tangkap parameter filter dari UI Dashboard (PBI 16 Final)
         $wilayah = $request->input('wilayah');
         $kategori = $request->input('kategori');
         $periode = $request->input('periode', 'harian');
 
+        // Query dengan join ke tabel pengguna untuk filter wilayah
         $query = DB::table('pengajuan_penjemputan')
             ->join('detail_penimbangan', 'pengajuan_penjemputan.id_pengajuan', '=', 'detail_penimbangan.id_pengajuan')
             ->join('pengguna', 'pengajuan_penjemputan.id_warga', '=', 'pengguna.id_pengguna')
             ->where('pengajuan_penjemputan.status', 'Selesai');
 
-        // Filter Wilayah
+        // Filter Berdasarkan Wilayah
         if (!empty($wilayah)) {
             $query->where('pengguna.id_wilayah', $wilayah);
         }
 
+        // Filter Berdasarkan Kategori Sampah
         if (!empty($kategori)) {
             $query->where('detail_penimbangan.id_kategori', $kategori);
         }
 
+        // Format grouping berdasarkan periode (harian, mingguan, bulanan)
         $format = '%Y-%m-%d'; 
         if ($periode == 'mingguan') {
             $format = '%x-W%v';
