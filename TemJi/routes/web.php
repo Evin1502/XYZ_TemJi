@@ -10,4 +10,5 @@ Route::get('/', function () {
 Route::prefix('admin')->group(function () {
     Route::get('/iuran', [IuranController::class, 'index'])->name('admin.iuran.index');
     Route::post('/iuran', [IuranController::class, 'store'])->name('admin.iuran.store');
+    Route::put('/iuran/{id}', [IuranController::class, 'update'])->name('admin.iuran.update');
 });

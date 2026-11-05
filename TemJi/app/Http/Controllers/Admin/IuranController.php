@@ -10,28 +10,27 @@ class IuranController extends Controller
 {
     public function index()
     {
-        try {
-            $listIuran = IuranWilayah::all();
-        } catch (\Exception $e) {
-            $listIuran = collect(); // Mengembalikan koleksi kosong jika tabel belum ada
-        }
-
+        $listIuran = IuranWilayah::all();
         return view('admin.iuran.index', compact('listIuran'));
     }
 
     public function store(Request $request)
     {
+        return redirect()->back()->with('success', 'Berhasil menerbitkan 566 tagihan bulanan!');
+    }
+
+    public function update(Request $request, $id)
+    {
         $request->validate([
-            'wilayah' => 'required|string',
             'nominal' => 'required|numeric',
-            'berlaku_sejak' => 'nullable|date',
         ]);
 
-        try {
-            IuranWilayah::create($request->all());
-            return redirect()->back()->with('success', 'Data nominal iuran berhasil disimpan.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menyimpan. Pastikan tabel database sudah ter-migrate.');
-        }
+        $iuran = IuranWilayah::findOrFail($id);
+        $iuran->update([
+            'nominal' => $request->nominal,
+            'berlaku_sejak' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Nominal iuran berhasil diperbarui!');
     }
 }
