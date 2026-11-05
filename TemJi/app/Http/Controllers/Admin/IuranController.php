@@ -10,7 +10,12 @@ class IuranController extends Controller
 {
     public function index()
     {
-        $listIuran = IuranWilayah::all();
+        try {
+            $listIuran = IuranWilayah::all();
+        } catch (\Exception $e) {
+            $listIuran = collect(); // Mengembalikan koleksi kosong jika tabel belum ada
+        }
+
         return view('admin.iuran.index', compact('listIuran'));
     }
 
@@ -22,14 +27,11 @@ class IuranController extends Controller
             'berlaku_sejak' => 'nullable|date',
         ]);
 
-        IuranWilayah::updateOrCreate(
-            ['wilayah' => $request->wilayah],
-            [
-                'nominal' => $request->nominal,
-                'berlaku_sejak' => $request->berlaku_sejak ?? now(),
-            ]
-        );
-
-        return redirect()->back()->with('success', 'Nominal iuran berhasil disimpan!');
+        try {
+            IuranWilayah::create($request->all());
+            return redirect()->back()->with('success', 'Data nominal iuran berhasil disimpan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menyimpan. Pastikan tabel database sudah ter-migrate.');
+        }
     }
 }
