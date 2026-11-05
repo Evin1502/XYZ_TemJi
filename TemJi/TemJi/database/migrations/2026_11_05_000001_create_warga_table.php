@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('warga', function (Blueprint $table) {
+            $table->id();
+            $table->string('no_kk', 16)->unique();
+            $table->string('nama_kepala_keluarga', 100);
+            $table->text('alamat')->nullable();
+            // nullable: warga lama yang belum punya wilayah harus dilengkapi admin
+            $table->foreignId('wilayah_id')->nullable()->constrained('wilayah')->nullOnDelete();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('warga');
+    }
+};
