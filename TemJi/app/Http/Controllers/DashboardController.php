@@ -7,10 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        // Query dasar: Agregasi data per tanggal dari tb_pengajuan_sampah dan detail_penimbangan
-        // Asumsi: status 'Selesai' menandakan penjemputan berhasil
+        // Hari 2: Query dasar per hari (belum ada filter)
         $trendData = DB::table('pengajuan_penjemputan')
             ->join('detail_penimbangan', 'pengajuan_penjemputan.id_pengajuan', '=', 'detail_penimbangan.id_pengajuan')
             ->select(
@@ -19,11 +18,10 @@ class DashboardController extends Controller
                 DB::raw('SUM(detail_penimbangan.berat_kg) as total_kg_daur_ulang')
             )
             ->where('pengajuan_penjemputan.status', 'Selesai')
-            ->groupBy(DB::raw('DATE(pengajuan_penjemputan.waktu_selesai)'))
+            ->groupBy('tanggal')
             ->orderBy('tanggal', 'asc')
             ->get();
 
-        // Kirim data ke view (nanti view dibuat di Hari 2)
         return view('dashboard.index', compact('trendData'));
     }
 }
