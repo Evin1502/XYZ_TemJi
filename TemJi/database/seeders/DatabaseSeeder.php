@@ -20,10 +20,13 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin TemJi',
             'email' => 'admin@temji.id',
+            'role' => 'admin',
         ]);
 
         $this->call([
+            WilayahSeeder::class,
             KategoriDaurUlangSeeder::class,
+            WargaSeeder::class,
         ]);
     }
 }
