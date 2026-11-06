@@ -60,9 +60,16 @@
                                 <span>Wilayah</span>
                             </a>
                         </li>
+                        @php
+                            $isKategoriActive = request()->routeIs('admin.kategori.*', 'home');
+                            $isVerifikasiActive = request()->routeIs('admin.verifikasi-warga.*');
+                            $pendingWargaCount = \Illuminate\Support\Facades\Schema::hasTable('warga')
+                                ? \App\Models\Warga::menunggu()->count()
+                                : 0;
+                        @endphp
                         <li>
-                            <a href="{{ route('admin.kategori.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs transition">
-                                <svg class="w-4 h-4 text-[#14532D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <a href="{{ route('admin.kategori.index') }}" class="flex items-center gap-3 px-3 {{ $isKategoriActive ? 'py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition">
+                                <svg class="w-4 h-4 {{ $isKategoriActive ? 'text-[#14532D]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ $isKategoriActive ? '2.2' : '2' }}">
                                     <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>
                                 </svg>
                                 <span>Kategori & Poin</span>
@@ -75,6 +82,21 @@
                 <div>
                     <span class="px-3 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">Operasional</span>
                     <ul class="mt-2 space-y-1">
+                        <li>
+                            <a href="{{ route('admin.verifikasi-warga.index') }}" class="flex items-center justify-between gap-2 px-3 {{ $isVerifikasiActive ? 'py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-4 h-4 {{ $isVerifikasiActive ? 'text-[#14532D]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ $isVerifikasiActive ? '2.2' : '2' }}" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>
+                                    </svg>
+                                    <span>Verifikasi Warga</span>
+                                </div>
+                                @if($pendingWargaCount > 0)
+                                    <span class="bg-[#FEF3C7] text-[#92400E] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                        {{ $pendingWargaCount }}
+                                    </span>
+                                @endif
+                            </a>
+                        </li>
                         <li>
                             <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -141,11 +163,11 @@
         <header class="bg-white border-b border-slate-200/80 px-8 py-3.5 flex items-center justify-between sticky top-0 z-20">
             <!-- BREADCRUMB -->
             <nav class="flex items-center text-xs text-slate-500 font-medium gap-2">
-                <span>Kategori & Poin</span>
+                <span>@yield('breadcrumb_parent', 'Kategori & Poin')</span>
                 <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
-                <span class="text-slate-900 font-semibold">Kategori daur ulang</span>
+                <span class="text-slate-900 font-semibold">@yield('breadcrumb_current', 'Kategori daur ulang')</span>
             </nav>
 
             <!-- USER PROFILE INFO -->
