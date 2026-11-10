@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             WilayahSeeder::class,
             KategoriDaurUlangSeeder::class,
             WargaSeeder::class,
+            AturanPenukaranPoinSeeder::class,
         ]);
     }
 }

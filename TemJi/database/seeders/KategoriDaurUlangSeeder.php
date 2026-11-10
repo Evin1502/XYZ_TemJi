@@ -33,20 +33,20 @@ class KategoriDaurUlangSeeder extends Seeder
             'keterangan' => 'Tarif awal periode Juli - Agustus',
         ]);
 
-        // b. 10 poin/kg (1 Sep – 10 Nov 2026) -> Berlaku saat ini
+        // b. 10 poin/kg (1 Sep – 30 Nov 2026) -> Berlaku saat ini
         RiwayatTarifPoin::create([
             'kategori_id' => $minyak->id,
             'poin_per_kg' => 10,
             'berlaku_sejak' => Carbon::create(2026, 9, 1, 0, 0, 0),
-            'berlaku_hingga' => Carbon::create(2026, 11, 10, 0, 0, 0),
+            'berlaku_hingga' => Carbon::create(2026, 11, 30, 23, 59, 59),
             'keterangan' => 'Tarif aktif operasional',
         ]);
 
-        // c. 12 poin/kg (Mulai 10 Nov 2026) -> Terjadwal di masa depan
+        // c. 12 poin/kg (Mulai 1 Des 2026) -> Terjadwal di masa depan
         RiwayatTarifPoin::create([
             'kategori_id' => $minyak->id,
             'poin_per_kg' => 12,
-            'berlaku_sejak' => Carbon::create(2026, 11, 10, 0, 0, 0),
+            'berlaku_sejak' => Carbon::create(2026, 12, 1, 0, 0, 0),
             'berlaku_hingga' => null,
             'keterangan' => 'Penyesuaian kemitraan biodiesel terjadwal',
         ]);
