@@ -25,12 +25,12 @@
 
     <!-- TABS -->
     <div class="flex items-center gap-2 border-b border-slate-200/60 pb-3">
-        <button class="bg-white px-4 py-1.5 rounded-full text-xs font-semibold text-slate-900 shadow-xs border border-slate-200/80 cursor-default">
+        <a href="{{ route('admin.kategori.index') }}" class="bg-white px-4 py-1.5 rounded-full text-xs font-semibold text-slate-900 shadow-xs border border-slate-200/80">
             Kategori
-        </button>
-        <button class="px-4 py-1.5 rounded-full text-xs font-medium text-slate-500 hover:text-slate-800 transition cursor-pointer">
+        </a>
+        <a href="{{ route('admin.aturan-penukaran.index') }}" class="px-4 py-1.5 rounded-full text-xs font-medium text-slate-500 hover:text-slate-800 transition">
             Aturan penukaran
-        </button>
+        </a>
     </div>
 
     <!-- TWO-COLUMN LAYOUT -->

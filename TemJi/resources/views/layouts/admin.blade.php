@@ -61,7 +61,7 @@
                             </a>
                         </li>
                         @php
-                            $isKategoriActive = request()->routeIs('admin.kategori.*', 'home');
+                            $isKategoriActive = request()->routeIs('admin.kategori.*', 'admin.aturan-penukaran.*', 'home');
                             $isVerifikasiActive = request()->routeIs('admin.verifikasi-warga.*');
                             $pendingWargaCount = \Illuminate\Support\Facades\Schema::hasTable('warga')
                                 ? \App\Models\Warga::menunggu()->count()
