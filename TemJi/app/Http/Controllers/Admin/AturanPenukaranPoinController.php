@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreAturanPenukaranRequest;
 use App\Models\AturanPenukaranPoin;
 use App\Models\User;
 use Carbon\Carbon;
@@ -52,25 +53,8 @@ class AturanPenukaranPoinController extends Controller
     /**
      * Simpan aturan penukaran poin baru dengan mekanisme Effective Dating (SCD Type 2).
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreAturanPenukaranRequest $request): RedirectResponse
     {
-        $request->validate([
-            'nilai_rupiah_per_poin' => ['required', 'integer', 'min:1'],
-            'batas_maksimal_potongan_persen' => ['required', 'integer', 'min:0', 'max:100'],
-            'minimal_poin_tukar' => ['required', 'integer', 'min:0'],
-            'berlaku_mulai' => ['required'],
-            'label_periode' => ['nullable', 'string', 'max:100'],
-        ], [
-            'nilai_rupiah_per_poin.required' => 'Nilai rupiah per 1 poin wajib diisi.',
-            'nilai_rupiah_per_poin.min' => 'Nilai rupiah per 1 poin minimal Rp 1.',
-            'batas_maksimal_potongan_persen.required' => 'Batas maksimal potongan wajib diisi.',
-            'batas_maksimal_potongan_persen.min' => 'Batas maksimal potongan tidak boleh bernilai negatif.',
-            'batas_maksimal_potongan_persen.max' => 'Batas maksimal potongan tidak boleh melebihi 100%.',
-            'minimal_poin_tukar.required' => 'Minimal poin untuk ditukarkan wajib diisi.',
-            'minimal_poin_tukar.min' => 'Minimal poin tidak boleh bernilai negatif.',
-            'berlaku_mulai.required' => 'Tanggal atau periode mulai berlaku wajib ditentukan.',
-        ]);
-
         DB::transaction(function () use ($request) {
             $adminId = $this->resolveAdminId();
 
