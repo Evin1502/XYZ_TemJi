@@ -1,48 +1,38 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\WilayahController;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\HomeRedirectController;
 use Illuminate\Support\Facades\Route;
 
-// Halaman utama: jika terotentikasi alihkan ke dashboard peran, jika belum alihkan ke login
-Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect()->route(Auth::user()->getDefaultRedirectRoute());
-    }
+Route::get('/', HomeRedirectController::class)->name('home');
 
-    return redirect()->route('login');
-})->name('home');
-
-// Rute Tamu (Guest): Otentikasi Login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('guest');
-
-// Rute Logout (Memerlukan login)
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
-// Rute Terproteksi Peran: Admin (Pengelola Pusat)
+// Tamu: registrasi warga (Farhan) dll.
+Route::middleware('guest')->group(function () {
+    foreach (glob(base_path('routes/modules/guest/*.php')) as $file) {
+        require $file;
+    }
+});
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    foreach (glob(base_path('routes/modules/admin/*.php')) as $file) {
+        require $file;
+    }
 });
 
-// Master Data Wilayah (Hanya dapat dikelola oleh Admin)
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::resource('wilayah', WilayahController::class)->except(['show', 'destroy']);
-});
-
-// Rute Terproteksi Peran: Petugas (Operasional Lapangan)
-Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('petugas.dashboard');
-    })->name('dashboard');
-});
-
-// Rute Terproteksi Peran: Warga (Layanan Masyarakat)
 Route::middleware(['auth', 'role:warga'])->prefix('warga')->name('warga.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('warga.dashboard');
-    })->name('dashboard');
+    Route::view('/dashboard', 'warga.dashboard')->name('dashboard');
+    foreach (glob(base_path('routes/modules/warga/*.php')) as $file) {
+        require $file;
+    }
+});
+
+Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
+    Route::view('/dashboard', 'petugas.dashboard')->name('dashboard');
+    foreach (glob(base_path('routes/modules/petugas/*.php')) as $file) {
+        require $file;
+    }
 });

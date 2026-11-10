@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Data Wilayah</h4>
-    <a href="{{ route('wilayah.create') }}" class="btn btn-primary">+ Tambah Wilayah</a>
+    <a href="{{ route('admin.wilayah.create') }}" class="btn btn-primary">+ Tambah Wilayah</a>
 </div>
 <table class="table table-bordered bg-white">
     <thead>
@@ -19,7 +19,7 @@
                     {{ $w->is_aktif ? 'Aktif' : 'Nonaktif' }}
                 </span>
             </td>
-            <td><a href="{{ route('wilayah.edit', $w) }}" class="btn btn-sm btn-warning">Ubah</a></td>
+            <td><a href="{{ route('admin.wilayah.edit', $w) }}" class="btn btn-sm btn-warning">Ubah</a></td>
         </tr>
     @empty
         <tr><td colspan="4" class="text-center">Belum ada wilayah.</td></tr>

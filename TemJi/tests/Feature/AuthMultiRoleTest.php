@@ -149,7 +149,7 @@ class AuthMultiRoleTest extends TestCase
         $this->get(route('admin.dashboard'))->assertRedirect(route('login'));
         $this->get(route('petugas.dashboard'))->assertRedirect(route('login'));
         $this->get(route('warga.dashboard'))->assertRedirect(route('login'));
-        $this->get(route('wilayah.index'))->assertRedirect(route('login'));
+        $this->get(route('admin.wilayah.index'))->assertRedirect(route('login'));
     }
 
     /**

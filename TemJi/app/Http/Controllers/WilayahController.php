@@ -21,7 +21,7 @@ class WilayahController extends Controller
     public function store(WilayahRequest $request)
     {
         Wilayah::create($request->validated());
-        return redirect()->route('wilayah.index')->with('success', 'Wilayah berhasil ditambahkan.');
+        return redirect()->route('admin.wilayah.index')->with('success', 'Wilayah berhasil ditambahkan.');
     }
 
     public function edit(Wilayah $wilayah)
@@ -32,6 +32,6 @@ class WilayahController extends Controller
     public function update(WilayahRequest $request, Wilayah $wilayah)
     {
         $wilayah->update($request->validated());
-        return redirect()->route('wilayah.index')->with('success', 'Wilayah berhasil diperbarui.');
+        return redirect()->route('admin.wilayah.index')->with('success', 'Wilayah berhasil diperbarui.');
     }
 }

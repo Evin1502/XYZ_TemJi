@@ -9,7 +9,7 @@ class WilayahRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // ganti dengan cek admin setelah autentikasi jadi
+        return $this->user()?->isAdmin() ?? false;
     }
 
     protected function prepareForValidation(): void
@@ -21,7 +21,7 @@ class WilayahRequest extends FormRequest
     {
         return [
             'nama' => ['required', 'string', 'max:100',
-                Rule::unique('wilayahs', 'nama')->ignore($this->route('wilayah'))],
+                Rule::unique('wilayah', 'nama')->ignore($this->route('wilayah'))],
             'jumlah_kk' => ['required', 'integer', 'min:0', 'max:100000'],
             'is_aktif' => ['boolean'],
         ];

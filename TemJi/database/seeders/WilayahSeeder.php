@@ -9,11 +9,11 @@ class WilayahSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ganti jumlah_kk dengan data asli
-        foreach (['Sukapura', 'Sukabirus'] as $nama) {
+        // Jumlah KK: GANTI dengan data asli. Nilai awal 0 dipertahankan karena VerifikasiWargaTest (Farhan) mengharapkan 0.
+        foreach (['Sukapura' => 0, 'Sukabirus' => 0] as $nama => $kk) {
             Wilayah::updateOrCreate(
                 ['nama' => $nama],
-                ['jumlah_kk' => 0, 'is_aktif' => true]
+                ['jumlah_kk' => $kk, 'is_aktif' => true]
             );
         }
     }

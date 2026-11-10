@@ -17,4 +17,4 @@
     <label class="form-check-label" for="is_aktif">Aktif</label>
 </div>
 <button type="submit" class="btn btn-primary">Simpan</button>
-<a href="{{ route('wilayah.index') }}" class="btn btn-secondary">Batal</a>
+<a href="{{ route('admin.wilayah.index') }}" class="btn btn-secondary">Batal</a>

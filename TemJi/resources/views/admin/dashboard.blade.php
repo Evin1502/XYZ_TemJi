@@ -95,7 +95,7 @@
                 </p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-                <a href="{{ route('wilayah.index') }}" class="px-4 py-2.5 bg-[#14532D] hover:bg-[#0f3d21] text-white rounded-xl font-medium text-xs shadow-xs transition flex items-center gap-2">
+                <a href="{{ route('admin.wilayah.index') }}" class="px-4 py-2.5 bg-[#14532D] hover:bg-[#0f3d21] text-white rounded-xl font-medium text-xs shadow-xs transition flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -117,7 +117,7 @@
                 <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Master Wilayah Layanan</div>
                 <div class="text-lg font-bold text-slate-900">Sukapura & Sukabirus</div>
                 <div class="text-xs text-slate-500">
-                    <a href="{{ route('wilayah.index') }}" class="text-[#14532D] font-semibold hover:underline">Buka Data Wilayah &rarr;</a>
+                    <a href="{{ route('admin.wilayah.index') }}" class="text-[#14532D] font-semibold hover:underline">Buka Data Wilayah &rarr;</a>
                 </div>
             </div>
 
