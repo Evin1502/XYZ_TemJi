@@ -25,9 +25,14 @@ class IuranController extends Controller
 
     public function bayar(Request $request, $id)
     {
+        // Validasi: Bukti transfer WAJIB dikirim jika memilih metode transfer
         $request->validate([
             'metode_pembayaran' => 'required|in:transfer,tunai',
-            'bukti_transfer' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // Maks 5 MB
+            'bukti_transfer' => 'required_if:metode_pembayaran,transfer|nullable|image|mimes:jpeg,png,jpg|max:5120',
+        ], [
+            'bukti_transfer.required_if' => 'Silakan unggah bukti transfer terlebih dahulu!',
+            'bukti_transfer.image' => 'Bukti transfer harus berupa gambar (JPG/PNG).',
+            'bukti_transfer.max' => 'Ukuran file bukti transfer maksimal 5 MB.',
         ]);
 
         try {
@@ -55,7 +60,7 @@ class IuranController extends Controller
 
             return redirect()->back()->with('success', 'Pembayaran iuran berhasil dikirim dan diverifikasi!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('success', 'Pembayaran iuran berhasil diproses!');
+            return redirect()->back()->with('error', 'Gagal memproses pembayaran iuran: ' . $e->getMessage());
         }
     }
 }

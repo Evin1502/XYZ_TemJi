@@ -91,11 +91,18 @@
             </div>
         </div>
 
-        <!-- Alert Notifikasi Sukses -->
+        <!-- Alert Notifikasi Sukses / Error -->
         @if(session('success'))
             <div class="p-4 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl text-sm font-semibold flex justify-between items-center shadow-sm">
                 <span>{{ session('success') }}</span>
                 <button onclick="this.parentElement.remove()" class="text-emerald-900 font-bold">&times;</button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="p-4 bg-red-100 border border-red-300 text-red-800 rounded-xl text-sm font-semibold flex justify-between items-center shadow-sm">
+                <span>{{ session('error') }}</span>
+                <button onclick="this.parentElement.remove()" class="text-red-900 font-bold">&times;</button>
             </div>
         @endif
 
@@ -168,14 +175,18 @@
                             <div x-show="metode === 'transfer'" class="space-y-3" x-cloak>
                                 <p class="text-xs text-gray-500">Silakan transfer ke rekening resmi kas RW: <strong class="text-gray-800">[NO. REKENING KAS RW]</strong></p>
                                 
-                                <label class="border-2 border-dashed border-gray-200 hover:border-emerald-500 bg-gray-50/50 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition text-center group">
+                                <label :class="!fileName ? 'border-red-300 bg-red-50/20' : 'border-emerald-500 bg-emerald-50/20'" class="border-2 border-dashed hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition text-center group">
                                     <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 group-hover:scale-110 transition">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                                     </div>
-                                    <span class="text-sm font-bold text-gray-800" x-text="fileName ? fileName : 'Unggah bukti transfer'"></span>
+                                    <span class="text-sm font-bold text-gray-800" x-text="fileName ? fileName : 'Unggah bukti transfer (Wajib)'"></span>
                                     <span class="text-xs text-gray-400 mt-0.5">Format file: JPG, PNG (Maksimal 5 MB)</span>
-                                    <input type="file" name="bukti_transfer" class="hidden" @change="fileName = $event.target.files[0]?.name">
+                                    <input type="file" name="bukti_transfer" class="hidden" :required="metode === 'transfer'" @change="fileName = $event.target.files[0]?.name">
                                 </label>
+
+                                @error('bukti_transfer')
+                                    <p class="text-xs text-red-600 font-medium">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Konten Tunai -->
@@ -183,7 +194,11 @@
                                 Pembayaran tunai sebesar <strong x-text="formatRupiah(total)"></strong> dapat langsung diserahkan kepada Ketua/Pengurus RT setempat.
                             </div>
 
-                            <button type="submit" class="w-full bg-[#1b5e3a] hover:bg-[#14492d] active:scale-[0.99] text-white font-semibold py-3.5 px-4 rounded-xl transition shadow-md text-sm tracking-wide">
+                            <!-- Tombol Submit Disabled Jika Belum Upload Bukti Saat Transfer -->
+                            <button type="submit" 
+                                    :disabled="metode === 'transfer' && !fileName"
+                                    :class="(metode === 'transfer' && !fileName) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#1b5e3a] hover:bg-[#14492d] text-white active:scale-[0.99]'"
+                                    class="w-full font-semibold py-3.5 px-4 rounded-xl transition shadow-md text-sm tracking-wide">
                                 Kirim & Selalu Verifikasi Pembayaran
                             </button>
                         </form>
@@ -226,7 +241,6 @@
                             </div>
                         </div>
                     @empty
-                        <!-- Data Dummy Tampilan Riwayat -->
                         <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition">
                             <div class="flex items-center space-x-3.5">
                                 <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
