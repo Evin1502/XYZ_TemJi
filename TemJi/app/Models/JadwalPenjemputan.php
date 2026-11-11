@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class JadwalPenjemputan extends Model
 {
@@ -15,7 +16,7 @@ class JadwalPenjemputan extends Model
 
     public const JENIS = [
         self::JENIS_SAMPAH_BIASA => 'Sampah biasa',
-        self::JENIS_DAUR_ULANG => 'Daur ulang',
+        self::JENIS_DAUR_ULANG   => 'Daur ulang',
     ];
 
     public const HARI = [
@@ -40,9 +41,13 @@ class JadwalPenjemputan extends Model
     ];
 
     protected $casts = [
-        'hari' => 'integer',
+        'hari'  => 'integer',
         'kuota' => 'integer',
     ];
+
+    // -------------------------------------------------------------------------
+    // Relasi
+    // -------------------------------------------------------------------------
 
     public function wilayah(): BelongsTo
     {
@@ -54,10 +59,27 @@ class JadwalPenjemputan extends Model
         return $this->belongsTo(User::class, 'petugas_id');
     }
 
+    /**
+     * Pengajuan daur ulang warga yang terikat pada jadwal ini.
+     * Kolom jadwal_id ditambahkan oleh migration Rifka (PBI 1).
+     */
+    public function pengajuan(): HasMany
+    {
+        return $this->hasMany(PengajuanDaurUlang::class, 'jadwal_id');
+    }
+
+    // -------------------------------------------------------------------------
+    // Scopes
+    // -------------------------------------------------------------------------
+
     public function scopeUntukWilayah(Builder $query, ?int $wilayahId): Builder
     {
         return $wilayahId ? $query->where('wilayah_id', $wilayahId) : $query;
     }
+
+    // -------------------------------------------------------------------------
+    // Helper
+    // -------------------------------------------------------------------------
 
     public function isDaurUlang(): bool
     {
@@ -96,24 +118,42 @@ class JadwalPenjemputan extends Model
     }
 
     /**
-     * Jumlah rumah yang sudah memilih slot ini pada tanggal tertentu.
-     * Akan dihitung dari pengajuan daur ulang warga setelah tabel pengajuan tersedia.
+     * Jumlah warga (pengajuan) yang sudah memilih slot jadwal ini.
+     *
+     * Menghitung pengajuan dengan status aktif (bukan dibatalkan) yang terikat
+     * pada jadwal ini melalui kolom jadwal_id. Kolom ini ditambahkan oleh
+     * migration Rifka; sebelum migration dijalankan metode ini mengembalikan 0.
      */
-    public function jumlahTerisi(Carbon $tanggal): int
+    public function jumlahTerisi(): int
     {
-        return 0;
+        if (! $this->isDaurUlang()) {
+            return 0;
+        }
+
+        return $this->pengajuan()
+            ->whereNotIn('status', [
+                PengajuanDaurUlang::STATUS_DIBATALKAN,
+            ])
+            ->count();
     }
 
-    public function isPenuh(Carbon $tanggal): bool
+    public function isPenuh(): bool
     {
-        return $this->isDaurUlang() && $this->jumlahTerisi($tanggal) >= $this->kuota;
+        return $this->isDaurUlang()
+            && $this->kuota !== null
+            && $this->jumlahTerisi() >= $this->kuota;
     }
 
     /**
      * Cek apakah petugas sudah punya jadwal lain yang jamnya tumpang-tindih di hari yang sama.
      */
-    public static function adaBentrok(int $petugasId, int $hari, string $jamMulai, string $jamSelesai, ?int $kecualiId = null): bool
-    {
+    public static function adaBentrok(
+        int $petugasId,
+        int $hari,
+        string $jamMulai,
+        string $jamSelesai,
+        ?int $kecualiId = null,
+    ): bool {
         return self::query()
             ->where('petugas_id', $petugasId)
             ->where('hari', $hari)

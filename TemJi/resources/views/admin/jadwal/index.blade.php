@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Jadwal Penjemputan')
-@section('breadcrumb_induk', 'Operasional')
-@section('breadcrumb', 'Jadwal')
+@section('breadcrumb_parent', 'Operasional')
+@section('breadcrumb_current', 'Jadwal')
 
 @use('App\Models\JadwalPenjemputan')
 

@@ -13,10 +13,10 @@ class PengajuanDaurUlang extends Model
     use HasFactory;
 
     public const STATUS_MENUNGGU_JADWAL = 'menunggu_jadwal';
-    public const STATUS_MENUNGGU = 'menunggu';
-    public const STATUS_DISETUJUI = 'disetujui';
-    public const STATUS_SELESAI = 'selesai';
-    public const STATUS_DIBATALKAN = 'dibatalkan';
+    public const STATUS_MENUNGGU        = 'menunggu';
+    public const STATUS_DISETUJUI       = 'disetujui';
+    public const STATUS_SELESAI         = 'selesai';
+    public const STATUS_DIBATALKAN      = 'dibatalkan';
 
     protected $table = 'pengajuan_daur_ulang';
 
@@ -24,6 +24,7 @@ class PengajuanDaurUlang extends Model
         'kode_pengajuan',
         'user_id',
         'wilayah_id',
+        'jadwal_id',           // FK ke jadwal_penjemputan (nullable – antar mandiri tidak perlu jadwal)
         'total_estimasi_kg',
         'total_estimasi_poin',
         'status',
@@ -31,9 +32,13 @@ class PengajuanDaurUlang extends Model
     ];
 
     protected $casts = [
-        'total_estimasi_kg' => 'integer',
+        'total_estimasi_kg'   => 'integer',
         'total_estimasi_poin' => 'integer',
     ];
+
+    // -------------------------------------------------------------------------
+    // Relasi
+    // -------------------------------------------------------------------------
 
     public function items(): HasMany
     {
@@ -51,11 +56,23 @@ class PengajuanDaurUlang extends Model
     }
 
     /**
+     * Jadwal penjemputan yang dipilih warga (null untuk pengajuan antar mandiri).
+     */
+    public function jadwal(): BelongsTo
+    {
+        return $this->belongsTo(JadwalPenjemputan::class, 'jadwal_id');
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper
+    // -------------------------------------------------------------------------
+
+    /**
      * Generator kode pengajuan deterministik unik, mis. DU-2610-0214 atau DU-2611-0001.
      */
     public static function generateKodePengajuan(?Carbon $waktu = null): string
     {
-        $waktu = $waktu ?? Carbon::now();
+        $waktu  = $waktu ?? Carbon::now();
         $prefix = 'DU-' . $waktu->format('ym') . '-';
 
         $lastPengajuan = self::where('kode_pengajuan', 'like', $prefix . '%')

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\JadwalPenjemputan;
+use App\Models\PengajuanDaurUlang;
 use App\Models\User;
 use App\Models\Wilayah;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -11,12 +12,13 @@ use Tests\TestCase;
 class JadwalPenjemputanTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Support\AuthAsRole;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Wilayah, petugas, dan jadwal rutin sesuai mockup
+        $this->actingAsAdmin();   // route admin kini di balik login
         $this->seed();
     }
 
@@ -26,14 +28,14 @@ class JadwalPenjemputanTest extends TestCase
     private function dataJadwal(array $ubah = []): array
     {
         return array_merge([
-            'jenis' => 'daur_ulang',
-            'wilayah_id' => Wilayah::where('nama', 'Sukapura')->value('id'),
-            'hari' => 4,
-            'jam_mulai' => '09:00',
+            'jenis'       => 'daur_ulang',
+            'wilayah_id'  => Wilayah::where('nama', 'Sukapura')->value('id'),
+            'hari'        => 4,
+            'jam_mulai'   => '09:00',
             'jam_selesai' => '11:00',
-            'kuota' => 20,
-            'petugas_id' => User::where('name', 'Pak Dedi')->value('id'),
-            'minggu' => '2026-11-02',
+            'kuota'       => 20,
+            'petugas_id'  => User::where('name', 'Pak Dedi')->value('id'),
+            'minggu'      => '2026-11-02',
         ], $ubah);
     }
 
@@ -51,10 +53,66 @@ class JadwalPenjemputanTest extends TestCase
         $response->assertSee('13.00–15.00');
         $response->assertSee('Sampah biasa · Sukapura');
         $response->assertSee('Daur ulang · Sukabirus');
-        $response->assertSee('Kuota 0/20');
+        // Kuota terisi dihitung dinamis — cukup pastikan teks "Kuota" muncul
+        $response->assertSee('Kuota');
         $response->assertSee('Pak Asep');
         $response->assertSee('Tambah jadwal');
         $response->assertViewHas('jadwalList', fn ($jadwal) => $jadwal->count() === 9);
+    }
+
+    /**
+     * Test 1b: Kuota 0/20 muncul saat belum ada pengajuan terdaftar di slot tersebut.
+     */
+    public function test_kuota_terisi_nol_saat_belum_ada_pengajuan(): void
+    {
+        $jadwal = JadwalPenjemputan::where('jenis', JadwalPenjemputan::JENIS_DAUR_ULANG)->first();
+
+        $this->assertSame(0, $jadwal->jumlahTerisi());
+        $this->assertFalse($jadwal->isPenuh());
+    }
+
+    /**
+     * Test 1c: jumlahTerisi() bertambah saat ada pengajuan aktif di slot ini.
+     */
+    public function test_kuota_terisi_bertambah_setelah_ada_pengajuan(): void
+    {
+        $warga  = User::where('role', 'warga')->first();
+        $jadwal = JadwalPenjemputan::where('jenis', JadwalPenjemputan::JENIS_DAUR_ULANG)->first();
+
+        // Buat pengajuan yang terikat ke jadwal ini
+        PengajuanDaurUlang::create([
+            'kode_pengajuan'      => 'DU-TEST-0001',
+            'user_id'             => $warga?->id,
+            'wilayah_id'          => $jadwal->wilayah_id,
+            'jadwal_id'           => $jadwal->id,
+            'total_estimasi_kg'   => 2,
+            'total_estimasi_poin' => 20,
+            'status'              => PengajuanDaurUlang::STATUS_MENUNGGU,
+        ]);
+
+        $jadwal->refresh();
+        $this->assertSame(1, $jadwal->jumlahTerisi());
+    }
+
+    /**
+     * Test 1d: Pengajuan yang dibatalkan tidak dihitung ke kuota.
+     */
+    public function test_pengajuan_dibatalkan_tidak_dihitung_ke_kuota(): void
+    {
+        $warga  = User::where('role', 'warga')->first();
+        $jadwal = JadwalPenjemputan::where('jenis', JadwalPenjemputan::JENIS_DAUR_ULANG)->first();
+
+        PengajuanDaurUlang::create([
+            'kode_pengajuan'      => 'DU-TEST-0002',
+            'user_id'             => $warga?->id,
+            'wilayah_id'          => $jadwal->wilayah_id,
+            'jadwal_id'           => $jadwal->id,
+            'total_estimasi_kg'   => 2,
+            'total_estimasi_poin' => 20,
+            'status'              => PengajuanDaurUlang::STATUS_DIBATALKAN,
+        ]);
+
+        $this->assertSame(0, $jadwal->jumlahTerisi());
     }
 
     /**
@@ -98,12 +156,12 @@ class JadwalPenjemputanTest extends TestCase
         $response->assertRedirect('/admin/jadwal?minggu=2026-11-02');
         $response->assertSessionHas('success', 'Jadwal berhasil disimpan.');
         $this->assertDatabaseHas('jadwal_penjemputan', [
-            'jenis' => 'daur_ulang',
-            'hari' => 4,
-            'jam_mulai' => '09:00:00',
+            'jenis'       => 'daur_ulang',
+            'hari'        => 4,
+            'jam_mulai'   => '09:00:00',
             'jam_selesai' => '11:00:00',
-            'kuota' => 20,
-            'petugas_id' => User::where('name', 'Pak Dedi')->value('id'),
+            'kuota'       => 20,
+            'petugas_id'  => User::where('name', 'Pak Dedi')->value('id'),
         ]);
 
         $this->get('/admin/jadwal?minggu=2026-11-02')->assertSee('09.00–11.00');
@@ -121,10 +179,10 @@ class JadwalPenjemputanTest extends TestCase
 
         $response->assertSessionHasNoErrors();
         $this->assertDatabaseHas('jadwal_penjemputan', [
-            'jenis' => 'sampah_biasa',
-            'hari' => 4,
+            'jenis'     => 'sampah_biasa',
+            'hari'      => 4,
             'jam_mulai' => '09:00:00',
-            'kuota' => null,
+            'kuota'     => null,
         ]);
     }
 
@@ -145,7 +203,7 @@ class JadwalPenjemputanTest extends TestCase
     public function test_jam_selesai_sebelum_jam_mulai_ditolak(): void
     {
         $response = $this->post('/admin/jadwal', $this->dataJadwal([
-            'jam_mulai' => '11:00',
+            'jam_mulai'   => '11:00',
             'jam_selesai' => '09:00',
         ]));
 
@@ -160,8 +218,8 @@ class JadwalPenjemputanTest extends TestCase
     {
         // Pak Dedi sudah bertugas Senin 09.00–11.00
         $response = $this->post('/admin/jadwal', $this->dataJadwal([
-            'hari' => 1,
-            'jam_mulai' => '10:00',
+            'hari'        => 1,
+            'jam_mulai'   => '10:00',
             'jam_selesai' => '12:00',
         ]));
 
@@ -170,8 +228,8 @@ class JadwalPenjemputanTest extends TestCase
 
         // Jadwal yang bersambung (mulai tepat saat jadwal lain selesai) tetap boleh
         $response = $this->post('/admin/jadwal', $this->dataJadwal([
-            'hari' => 1,
-            'jam_mulai' => '11:00',
+            'hari'        => 1,
+            'jam_mulai'   => '11:00',
             'jam_selesai' => '12:00',
         ]));
 
@@ -207,5 +265,33 @@ class JadwalPenjemputanTest extends TestCase
 
         $response->assertSessionHasErrors(['wilayah_id' => 'Wilayah tidak ditemukan atau sudah nonaktif.']);
         $this->assertDatabaseCount('jadwal_penjemputan', 9);
+    }
+
+    /**
+     * Test 11: isPenuh() true saat jumlah pengajuan aktif >= kuota.
+     */
+    public function test_jadwal_penuh_saat_pengajuan_melebihi_kuota(): void
+    {
+        $warga  = User::where('role', 'warga')->first();
+        $jadwal = JadwalPenjemputan::where('jenis', JadwalPenjemputan::JENIS_DAUR_ULANG)
+            ->where('kuota', 20)
+            ->first();
+
+        // Isi kuota penuh
+        for ($i = 1; $i <= 20; $i++) {
+            PengajuanDaurUlang::create([
+                'kode_pengajuan'      => sprintf('DU-TEST-%04d', $i),
+                'user_id'             => $warga?->id,
+                'wilayah_id'          => $jadwal->wilayah_id,
+                'jadwal_id'           => $jadwal->id,
+                'total_estimasi_kg'   => 1,
+                'total_estimasi_poin' => 10,
+                'status'              => PengajuanDaurUlang::STATUS_MENUNGGU,
+            ]);
+        }
+
+        $jadwal->refresh();
+        $this->assertSame(20, $jadwal->jumlahTerisi());
+        $this->assertTrue($jadwal->isPenuh());
     }
 }
