@@ -26,18 +26,8 @@ class WargaSeeder extends Seeder
             ['jumlah_kk' => 0, 'is_aktif' => true]
         );
 
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@temji.id'],
-            [
-                'name' => 'Admin TemJi',
-                'role' => 'admin',
-                'password' => Hash::make('password123'),
-            ]
-        );
-
-        if ($admin->role !== 'admin') {
-            $admin->update(['role' => 'admin']);
-        }
+        // Gunakan akun admin kanonik dari UserSeeder jika sudah tersedia (tanpa membuat admin baru)
+        $adminId = User::where('role', 'admin')->value('id');
 
         // 1. Warga Terverifikasi: Budi Santoso (Sukapura)
         $userBudi = User::updateOrCreate(
@@ -61,7 +51,7 @@ class WargaSeeder extends Seeder
                 'foto_identitas' => 'identitas_warga/sample_ktp_budi.jpg',
                 'status_verifikasi' => Warga::STATUS_TERVERIFIKASI,
                 'catatan_verifikasi' => 'Data KTP dan KK sesuai domisili RW 04 Sukapura.',
-                'diverifikasi_oleh' => $admin->id,
+                'diverifikasi_oleh' => $adminId,
                 'diverifikasi_pada' => Carbon::now()->subDays(3),
             ]
         );
@@ -115,19 +105,9 @@ class WargaSeeder extends Seeder
                 'foto_identitas' => 'identitas_warga/sample_ktp_rian.jpg',
                 'status_verifikasi' => Warga::STATUS_DITOLAK,
                 'catatan_verifikasi' => 'Foto KTP buram dan angka NIK tidak terbaca jelas. Silakan unggah ulang foto KTP asli.',
-                'diverifikasi_oleh' => $admin->id,
+                'diverifikasi_oleh' => $adminId,
                 'diverifikasi_pada' => Carbon::now()->subDay(),
             ]
         );
-
-        // Sinkronisasi jumlah KK terverifikasi unik pada masing-masing wilayah
-        foreach ([$sukapura, $sukabirus] as $wilayah) {
-            $verifiedKkCount = Warga::where('wilayah_id', $wilayah->id)
-                ->where('status_verifikasi', Warga::STATUS_TERVERIFIKASI)
-                ->distinct('no_kk')
-                ->count('no_kk');
-
-            $wilayah->update(['jumlah_kk' => $verifiedKkCount]);
-        }
     }
 }

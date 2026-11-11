@@ -15,17 +15,6 @@
                 Validasi kesesuaian KTP/KK dan domisili wilayah Sukapura & Sukabirus sebelum mengaktifkan akses layanan warga.
             </p>
         </div>
-        <div class="flex items-center gap-2.5">
-            <a href="{{ route('warga.registrasi.status') }}" class="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 px-3.5 py-2.5 rounded-xl font-medium text-xs shadow-2xs transition">
-                <span>Portal Status Warga</span>
-            </a>
-            <a href="{{ route('warga.registrasi.form') }}" class="inline-flex items-center gap-2 bg-[#14532D] hover:bg-[#0f3d21] text-white px-4 py-2.5 rounded-xl font-medium text-xs shadow-xs transition">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Form registrasi warga</span>
-            </a>
-        </div>
     </div>
 
     <!-- FILTER TABS & PENCARIAN -->

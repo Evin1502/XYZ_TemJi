@@ -230,22 +230,53 @@ class RegistrasiWargaTest extends TestCase
     }
 
     /**
-     * Test 7: Warga dapat memeriksa status verifikasi berdasarkan pencarian 16 digit NIK.
+     * Test 7: Warga hanya dapat melihat status pendaftarannya sendiri (tanpa pencarian NIK publik).
      */
-    public function test_warga_dapat_mengecek_status_pendaftaran_berdasarkan_nik(): void
+    public function test_warga_hanya_dapat_melihat_status_pendaftaran_miliknya_sendiri(): void
     {
         $this->seed(WargaSeeder::class);
 
-        $responseVerified = $this->get(route('warga.registrasi.status', ['nik' => '3204081205850001']));
+        $budi = User::where('email', 'budi.santoso@temji.id')->firstOrFail();
+        $responseVerified = $this->actingAs($budi)->get(route('warga.registrasi.status'));
         $responseVerified->assertStatus(200);
         $responseVerified->assertSee('Budi Santoso');
         $responseVerified->assertSee('Akun Warga Terverifikasi Aktif');
+        $responseVerified->assertDontSee('Rian Pratama');
 
-        $responseRejected = $this->get(route('warga.registrasi.status', ['nik' => '3204082111980003']));
+        $rian = User::where('email', 'rian.pratama@temji.id')->firstOrFail();
+        $responseRejected = $this->actingAs($rian)->get(route('warga.registrasi.status'));
         $responseRejected->assertStatus(200);
         $responseRejected->assertSee('Rian Pratama');
         $responseRejected->assertSee('Foto KTP buram');
         $responseRejected->assertSee('Unggah Ulang Bukti Identitas');
+    }
+
+    /**
+     * Test 7b: Mengisi ?nik= atau ?warga= milik orang lain tidak membocorkan data orang lain.
+     */
+    public function test_parameter_nik_dan_warga_milik_orang_lain_tidak_membocorkan_data(): void
+    {
+        $this->seed(WargaSeeder::class);
+
+        $budi = User::where('email', 'budi.santoso@temji.id')->firstOrFail();
+        $rian = Warga::where('nik', '3204082111980003')->firstOrFail();
+
+        $response = $this->actingAs($budi)->get(route('warga.registrasi.status', [
+            'nik' => $rian->nik,
+            'warga' => $rian->id,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('Budi Santoso');
+        $response->assertDontSee('Rian Pratama');
+    }
+
+    /**
+     * Test 7c: Tamu (belum login) dialihkan ke halaman login saat membuka status pendaftaran.
+     */
+    public function test_tamu_tidak_dapat_membuka_status_pendaftaran(): void
+    {
+        $this->get(route('warga.registrasi.status'))->assertRedirect(route('login'));
     }
 
     /**
@@ -261,7 +292,7 @@ class RegistrasiWargaTest extends TestCase
 
         $fotoPerbaikan = $this->buatFotoKtpTiruan('ktp_rian_jelas.png');
 
-        $response = $this->post(route('warga.registrasi.resubmit', $rian->id), [
+        $response = $this->actingAs($rian->user)->post(route('warga.registrasi.resubmit', $rian->id), [
             'foto_identitas' => $fotoPerbaikan,
             'alamat' => 'Gang PGA Blok C No. 21A, RT 01/RW 02, Desa Sukapura',
         ]);
@@ -274,5 +305,24 @@ class RegistrasiWargaTest extends TestCase
         $this->assertNull($rian->diverifikasi_oleh);
         $this->assertNull($rian->diverifikasi_pada);
         Storage::disk('public')->assertExists($rian->foto_identitas);
+    }
+
+    /**
+     * Test 9: Warga lain tidak dapat mengubah data pendaftaran milik orang lain.
+     */
+    public function test_warga_tidak_dapat_resubmit_data_milik_orang_lain(): void
+    {
+        Storage::fake('public');
+        $this->seed(WargaSeeder::class);
+
+        $budi = User::where('email', 'budi.santoso@temji.id')->firstOrFail();
+        $rian = Warga::where('nik', '3204082111980003')->firstOrFail();
+
+        $response = $this->actingAs($budi)->post(route('warga.registrasi.resubmit', $rian->id), [
+            'foto_identitas' => $this->buatFotoKtpTiruan('ktp_palsu.png'),
+        ]);
+
+        $response->assertForbidden();
+        $this->assertTrue($rian->fresh()->isRejected());
     }
 }

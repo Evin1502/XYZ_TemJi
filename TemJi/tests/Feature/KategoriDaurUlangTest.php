@@ -3,19 +3,22 @@
 namespace Tests\Feature;
 
 use App\Models\KategoriDaurUlang;
-use App\Models\RiwayatTarifPoin;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class KategoriDaurUlangTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Support\AuthAsRole;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
+        $this->actingAsAdmin();   // route admin kini di balik login
+
         // Jalankan seeder agar data awal terisi
         $this->seed(\Database\Seeders\KategoriDaurUlangSeeder::class);
     }
@@ -186,5 +189,17 @@ class KategoriDaurUlangTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['nama', 'tipe', 'satuan', 'poin_per_kg']);
+    }
+
+    /**
+     * Test 9: Tamu dan non-admin tidak dapat mengakses halaman admin kategori daur ulang.
+     */
+    public function test_non_admin_dan_tamu_tidak_dapat_mengakses_halaman_kategori(): void
+    {
+        $this->actingAsWarga();
+        $this->get(route('admin.kategori.index'))->assertRedirect(route('warga.dashboard'));
+
+        Auth::logout();
+        $this->get(route('admin.kategori.index'))->assertRedirect(route('login'));
     }
 }

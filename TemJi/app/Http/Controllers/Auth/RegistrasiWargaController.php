@@ -63,28 +63,18 @@ class RegistrasiWargaController extends Controller
     }
 
     /**
-     * Tampilkan halaman status pendaftaran dan verifikasi identitas warga.
+     * Status pendaftaran: hanya milik akun yang sedang login.
+     * Pencarian ?nik= / ?warga= dihapus karena membuka data warga lain.
      */
     public function statusPendaftaran(Request $request): View
     {
-        $warga = null;
-        $searchedNik = trim((string) $request->query('nik', ''));
+        $warga = $request->user()->warga()
+            ->with(['wilayah', 'user', 'verifikator'])
+            ->firstOrFail();
 
-        if ($searchedNik !== '') {
-            $warga = Warga::with(['wilayah', 'user', 'verifikator'])
-                ->where('nik', $searchedNik)
-                ->first();
-        } elseif ($request->filled('warga')) {
-            $warga = Warga::with(['wilayah', 'user', 'verifikator'])
-                ->find($request->query('warga'));
-        } elseif (Auth::check() && Auth::user()->warga) {
-            $warga = Auth::user()->warga()->with(['wilayah', 'user', 'verifikator'])->first();
-        } elseif (session()->has('registered_warga_id')) {
-            $warga = Warga::with(['wilayah', 'user', 'verifikator'])
-                ->find(session('registered_warga_id'));
-        }
-
-        $daftarWargaTerbaru = Warga::with('wilayah')->orderByDesc('created_at')->limit(5)->get();
+        // Dipertahankan agar blade lama tidak error (blok pencarian sudah dihapus dari blade).
+        $searchedNik = '';
+        $daftarWargaTerbaru = collect();
 
         return view('auth.status_pendaftaran', compact('warga', 'searchedNik', 'daftarWargaTerbaru'));
     }
@@ -94,7 +84,10 @@ class RegistrasiWargaController extends Controller
      */
     public function resubmit(Request $request, int $id): RedirectResponse
     {
-        $warga = Warga::findOrFail($id);
+        // Hanya pemilik data, dan hanya bila status ditolak.
+        $warga = $request->user()->warga;
+        abort_unless($warga && $warga->id === $id, 403);
+        abort_unless($warga->isRejected(), 403);
 
         $request->validate([
             'foto_identitas' => ['required', 'file', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],

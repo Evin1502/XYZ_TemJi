@@ -3,20 +3,23 @@
 namespace Tests\Feature;
 
 use App\Models\AturanPenukaranPoin;
-use App\Models\User;
 use Database\Seeders\AturanPenukaranPoinSeeder;
 use Database\Seeders\KategoriDaurUlangSeeder;
 use Database\Seeders\WilayahSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class AturanPenukaranPoinTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Support\AuthAsRole;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->actingAsAdmin();   // route admin kini di balik login
 
         $this->seed([
             WilayahSeeder::class,
@@ -68,16 +71,11 @@ class AturanPenukaranPoinTest extends TestCase
      */
     public function test_admin_dapat_menyimpan_aturan_penukaran_baru_dengan_pola_scd_type_2(): void
     {
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@temji.id'],
-            ['name' => 'Admin TemJi', 'role' => 'admin', 'password' => 'password123']
-        );
-
         $initialCount = AturanPenukaranPoin::count();
         $oldActive = AturanPenukaranPoin::aktif()->first();
         $this->assertNotNull($oldActive);
 
-        $response = $this->actingAs($admin)->post(route('admin.aturan-penukaran.store'), [
+        $response = $this->post(route('admin.aturan-penukaran.store'), [
             'nilai_rupiah_per_poin' => 150,
             'batas_maksimal_potongan_persen' => 60,
             'minimal_poin_tukar' => 40,
@@ -152,7 +150,7 @@ class AturanPenukaranPoinTest extends TestCase
     }
 
     /**
-     * Test 6: Validasi menolak minimal poin untuk ditukar yang bernilai negatif.
+     * Test 6: Validasi menolak minimal poin untuk ditukarkan yang bernilai negatif.
      */
     public function test_validasi_menolak_minimal_poin_tukar_yang_negatif(): void
     {
@@ -237,5 +235,24 @@ class AturanPenukaranPoinTest extends TestCase
         $this->assertEquals(100, $hasil['poin_terpakai']); // Hanya 100 poin yang terpakai
         $this->assertEquals(400, $hasil['sisa_saldo_poin']); // 400 poin tersisa dan tidak hangus
         $this->assertEquals(10000, $hasil['sisa_yang_dibayar']);
+    }
+
+    /**
+     * Test 11: Tamu dan non-admin tidak dapat mengakses maupun menyimpan aturan penukaran poin.
+     */
+    public function test_non_admin_dan_tamu_tidak_dapat_mengakses_aturan_penukaran_poin(): void
+    {
+        $this->actingAsWarga();
+        $this->get(route('admin.aturan-penukaran.index'))->assertRedirect(route('warga.dashboard'));
+        $this->post(route('admin.aturan-penukaran.store'), [
+            'nilai_rupiah_per_poin' => 200,
+            'batas_maksimal_potongan_persen' => 50,
+            'minimal_poin_tukar' => 10,
+            'berlaku_mulai' => '2027-02-01',
+        ])->assertRedirect(route('warga.dashboard'));
+
+        Auth::logout();
+        $this->get(route('admin.aturan-penukaran.index'))->assertRedirect(route('login'));
+        $this->post(route('admin.aturan-penukaran.store'), [])->assertRedirect(route('login'));
     }
 }

@@ -8,15 +8,19 @@ use App\Models\Wilayah;
 use Database\Seeders\WargaSeeder;
 use Database\Seeders\WilayahSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class VerifikasiWargaTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Support\AuthAsRole;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->actingAsAdmin();   // route admin kini di balik login
 
         $this->seed([
             WilayahSeeder::class,
@@ -56,15 +60,15 @@ class VerifikasiWargaTest extends TestCase
     }
 
     /**
-     * Test 3: Admin dapat menyetujui verifikasi warga dan memperbarui jumlah KK wilayah terkait.
+     * Test 3: Admin dapat menyetujui verifikasi warga tanpa menimpa jumlah KK wilayah yang dikelola Admin PBI 1.
      */
-    public function test_admin_dapat_menyetujui_verifikasi_warga_dan_sinkronisasi_jumlah_kk_wilayah(): void
+    public function test_admin_dapat_menyetujui_verifikasi_warga_tanpa_menimpa_jumlah_kk_wilayah(): void
     {
         $admin = User::where('role', 'admin')->firstOrFail();
         $siti = Warga::where('nik', '3204084509920002')->firstOrFail();
         $sukabirus = Wilayah::where('nama', 'Sukabirus')->firstOrFail();
+        $sukabirus->update(['jumlah_kk' => 266]);
 
-        $this->assertEquals(0, $sukabirus->jumlah_kk);
         $this->assertTrue($siti->isPending());
 
         $response = $this->actingAs($admin)->patch(route('admin.verifikasi-warga.approve', $siti->id), [
@@ -80,19 +84,18 @@ class VerifikasiWargaTest extends TestCase
         $this->assertEquals($admin->id, $siti->diverifikasi_oleh);
         $this->assertNotNull($siti->diverifikasi_pada);
         $this->assertEquals('Dokumen KTP asli sesuai domisili RW 03 Sukabirus.', $siti->catatan_verifikasi);
-        $this->assertEquals(1, $sukabirus->jumlah_kk);
+        $this->assertEquals(266, $sukabirus->jumlah_kk);
     }
 
     /**
-     * Test 4: Dua anggota keluarga dengan Nomor KK sama tetap dihitung 1 KK unik pada wilayah.
+     * Test 4: Menyetujui beberapa warga dalam satu atau beda KK menjaga jumlah KK wilayah tetap utuh.
      */
-    public function test_dua_anggota_keluarga_dengan_no_kk_sama_tetap_terhitung_satu_kk_unik_pada_wilayah(): void
+    public function test_menyetujui_beberapa_warga_tidak_mengubah_jumlah_kk_wilayah(): void
     {
         $admin = User::where('role', 'admin')->firstOrFail();
         $sukapura = Wilayah::where('nama', 'Sukapura')->firstOrFail();
+        $sukapura->update(['jumlah_kk' => 300]);
         $budi = Warga::where('nik', '3204081205850001')->firstOrFail();
-
-        $this->assertEquals(1, $sukapura->jumlah_kk);
 
         // Anggota keluarga satu KK dengan Budi Santoso
         $userIstri = User::create([
@@ -105,7 +108,7 @@ class VerifikasiWargaTest extends TestCase
         $wargaSatuKk = Warga::create([
             'user_id' => $userIstri->id,
             'nik' => '3204085006880007',
-            'no_kk' => $budi->no_kk, // Nomor KK sama
+            'no_kk' => $budi->no_kk,
             'nama_lengkap' => 'Ratna Sari',
             'no_hp' => '081223344557',
             'alamat' => $budi->alamat,
@@ -115,16 +118,13 @@ class VerifikasiWargaTest extends TestCase
         ]);
 
         $this->actingAs($admin)->patch(route('admin.verifikasi-warga.approve', $wargaSatuKk->id));
+        $this->assertTrue($wargaSatuKk->fresh()->isVerified());
 
-        $sukapura->refresh();
-        $this->assertEquals(1, $sukapura->jumlah_kk);
-
-        // Sekarang setujui warga dari KK berbeda (Rian Pratama) di Sukapura -> jumlah_kk naik menjadi 2
         $rian = Warga::where('nik', '3204082111980003')->firstOrFail();
         $this->actingAs($admin)->patch(route('admin.verifikasi-warga.approve', $rian->id));
+        $this->assertTrue($rian->fresh()->isVerified());
 
-        $sukapura->refresh();
-        $this->assertEquals(2, $sukapura->jumlah_kk);
+        $this->assertEquals(300, $sukapura->fresh()->jumlah_kk);
     }
 
     /**
@@ -162,5 +162,17 @@ class VerifikasiWargaTest extends TestCase
 
         $response->assertSessionHasErrors(['catatan_verifikasi']);
         $this->assertTrue($siti->fresh()->isPending());
+    }
+
+    /**
+     * Test 7: Tamu dan non-admin tidak dapat mengakses panel verifikasi warga.
+     */
+    public function test_non_admin_dan_tamu_tidak_dapat_mengakses_verifikasi_warga(): void
+    {
+        $this->actingAsWarga();
+        $this->get(route('admin.verifikasi-warga.index'))->assertRedirect(route('warga.dashboard'));
+
+        Auth::logout();
+        $this->get(route('admin.verifikasi-warga.index'))->assertRedirect(route('login'));
     }
 }

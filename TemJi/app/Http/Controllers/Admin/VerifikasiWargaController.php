@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Warga;
 use App\Models\Wilayah;
 use Carbon\Carbon;
@@ -55,10 +54,6 @@ class VerifikasiWargaController extends Controller
                 'diverifikasi_oleh' => $verifikatorId,
                 'diverifikasi_pada' => Carbon::now(),
             ]);
-
-            if ($warga->wilayah_id) {
-                $this->sinkronkanJumlahKkWilayah($warga->wilayah_id);
-            }
         });
 
         return redirect()
@@ -90,10 +85,6 @@ class VerifikasiWargaController extends Controller
                 'diverifikasi_oleh' => $verifikatorId,
                 'diverifikasi_pada' => Carbon::now(),
             ]);
-
-            if ($warga->wilayah_id) {
-                $this->sinkronkanJumlahKkWilayah($warga->wilayah_id);
-            }
         });
 
         return redirect()
@@ -164,27 +155,10 @@ class VerifikasiWargaController extends Controller
     }
 
     /**
-     * Tentukan ID admin verifikator dari sesi aktif atau fallback admin utama.
+     * Tentukan ID admin verifikator dari sesi admin yang sedang login.
      */
     private function resolveAdminId(): ?int
     {
-        if (Auth::check() && Auth::user()->isAdmin()) {
-            return Auth::id();
-        }
-
-        return User::where('role', 'admin')->value('id') ?? Auth::id();
-    }
-
-    /**
-     * Hitung ulang jumlah KK unik yang terverifikasi pada wilayah terkait.
-     */
-    private function sinkronkanJumlahKkWilayah(int $wilayahId): void
-    {
-        $verifiedKkCount = Warga::where('wilayah_id', $wilayahId)
-            ->where('status_verifikasi', Warga::STATUS_TERVERIFIKASI)
-            ->distinct('no_kk')
-            ->count('no_kk');
-
-        Wilayah::where('id', $wilayahId)->update(['jumlah_kk' => $verifiedKkCount]);
+        return Auth::check() && Auth::user()->isAdmin() ? Auth::id() : null;
     }
 }

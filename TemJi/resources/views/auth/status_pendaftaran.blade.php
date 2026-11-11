@@ -37,12 +37,19 @@
             </div>
 
             <div class="flex items-center gap-2.5">
-                <a href="{{ route('warga.registrasi.form') }}" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
-                    + Registrasi Warga Baru
-                </a>
-                <a href="{{ route('admin.verifikasi-warga.index') }}" class="px-3.5 py-2 rounded-xl bg-[#EBF7EE] hover:bg-emerald-100 text-[#14532D] font-semibold text-xs transition">
-                    Panel Admin
-                </a>
+                @if(\Illuminate\Support\Facades\Route::has('warga.dashboard'))
+                    <a href="{{ route('warga.dashboard') }}" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
+                        Dashboard Warga
+                    </a>
+                @endif
+                @if(\Illuminate\Support\Facades\Route::has('logout'))
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="px-3.5 py-2 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50 text-slate-700 hover:text-rose-700 font-medium text-xs transition cursor-pointer">
+                            Keluar
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
     </header>
@@ -72,49 +79,6 @@
             </div>
         @endif
 
-        <!-- PENCARIAN STATUS BERDASARKAN NIK -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div>
-                    <h2 class="text-base font-bold text-slate-900">Cek Status Pendaftaran Warga</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Masukkan 16 digit NIK untuk melihat progres verifikasi identitas akun Anda.</p>
-                </div>
-            </div>
-
-            <form method="GET" action="{{ route('warga.registrasi.status') }}" class="flex flex-col sm:flex-row gap-3">
-                <input
-                    type="text"
-                    name="nik"
-                    value="{{ $searchedNik }}"
-                    maxlength="16"
-                    placeholder="Masukkan 16 digit NIK terdaftar..."
-                    class="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:ring-2 focus:ring-[#14532D] focus:border-transparent focus:outline-none transition"
-                >
-                <button type="submit" class="px-5 py-2.5 bg-[#14532D] hover:bg-[#0f3d21] text-white rounded-xl font-semibold text-xs transition cursor-pointer">
-                    Periksa Status
-                </button>
-            </form>
-
-            @if($daftarWargaTerbaru->isNotEmpty())
-                <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2 text-[11px]">
-                    <span class="text-slate-400 font-medium">Akses cepat warga terdaftar:</span>
-                    @foreach($daftarWargaTerbaru as $sample)
-                        <a href="{{ route('warga.registrasi.status', ['warga' => $sample->id]) }}"
-                           class="px-2.5 py-1 rounded-full border {{ $warga && $warga->id === $sample->id ? 'bg-[#EBF7EE] border-emerald-300 text-[#14532D] font-semibold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }} transition">
-                            {{ $sample->nama_lengkap }} ({{ $sample->badge_status['label'] }})
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-
-        @if($searchedNik !== '' && !$warga)
-            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center space-y-2">
-                <p class="text-sm font-bold text-amber-900">Data NIK {{ $searchedNik }} tidak ditemukan</p>
-                <p class="text-xs text-amber-700">Pastikan 16 digit NIK yang dimasukkan sudah benar atau silakan lakukan registrasi akun warga baru.</p>
-            </div>
-        @endif
-
         @if($warga)
             @php
                 $badge = $warga->badge_status;
@@ -141,7 +105,7 @@
                         <div class="bg-emerald-50/90 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 space-y-1">
                             <div class="font-bold">Akun Warga Terverifikasi Aktif</div>
                             <p class="text-emerald-800 leading-relaxed">
-                                Selamat! Identitas KTP/KK dan domisili Anda di wilayah <span class="font-semibold">{{ $warga->wilayah?->nama }}</span> telah disetujui oleh pengelola TemJi. Anda berhak menggunakan layanan penjemputan sampah terjadwal dan setoran daur ulang berpoin.
+                                Selamat! Identitas KTP/KK dan domisili Anda di wilayah <span class="font-semibold">{{ $warga->wilayah?->nama ?? '-' }}</span> telah disetujui oleh pengelola TemJi. Anda berhak menggunakan layanan penjemputan sampah terjadwal dan setoran daur ulang berpoin.
                             </p>
                         </div>
                     @elseif($warga->isRejected())
@@ -155,7 +119,7 @@
                         <div class="bg-amber-50/90 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 space-y-1">
                             <div class="font-bold">Menunggu Verifikasi Pengelola TemJi</div>
                             <p class="text-amber-800 leading-relaxed">
-                                Dokumen identitas Anda telah diterima dan sedang berada dalam antrean pemeriksaan Admin wilayah <span class="font-semibold">{{ $warga->wilayah?->nama }}</span>.
+                                Dokumen identitas Anda telah diterima dan sedang berada dalam antrean pemeriksaan Admin wilayah <span class="font-semibold">{{ $warga->wilayah?->nama ?? '-' }}</span>.
                             </p>
                         </div>
                     @endif

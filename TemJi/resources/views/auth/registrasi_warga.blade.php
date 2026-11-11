@@ -37,12 +37,11 @@
             </div>
 
             <div class="flex items-center gap-2.5">
-                <a href="{{ route('warga.registrasi.status') }}" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition">
-                    Cek Status Verifikasi
-                </a>
-                <a href="{{ route('admin.verifikasi-warga.index') }}" class="px-3.5 py-2 rounded-xl bg-[#EBF7EE] hover:bg-emerald-100 text-[#14532D] font-semibold text-xs transition">
-                    Panel Admin
-                </a>
+                @if(\Illuminate\Support\Facades\Route::has('login'))
+                    <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-xl bg-[#EBF7EE] hover:bg-emerald-100 text-[#14532D] font-semibold text-xs transition">
+                        Masuk ke Akun
+                    </a>
+                @endif
             </div>
         </div>
     </header>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAturanPenukaranRequest;
 use App\Models\AturanPenukaranPoin;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -67,7 +66,7 @@ class AturanPenukaranPoinController extends Controller
             }
 
             // Tutup aturan aktif sebelumnya (SCD Type 2)
-            $aturanLama = AturanPenukaranPoin::whereNull('berlaku_sampai')->first();
+            $aturanLama = AturanPenukaranPoin::aktif()->first();
             if ($aturanLama) {
                 $tanggalTutup = $berlakuMulai->copy()->subDay();
                 if ($tanggalTutup < $aturanLama->berlaku_mulai) {
@@ -102,14 +101,10 @@ class AturanPenukaranPoinController extends Controller
     }
 
     /**
-     * Tentukan ID pengguna admin verifikator.
+     * Tentukan ID pengguna admin yang sedang login.
      */
     private function resolveAdminId(): ?int
     {
-        if (Auth::check() && Auth::user()->isAdmin()) {
-            return Auth::id();
-        }
-
-        return User::where('role', 'admin')->value('id') ?? Auth::id();
+        return Auth::check() && Auth::user()->isAdmin() ? Auth::id() : null;
     }
 }

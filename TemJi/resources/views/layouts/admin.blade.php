@@ -45,23 +45,23 @@
                     <span class="px-3 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">Utama</span>
                     <ul class="mt-2 space-y-1">
                         <li>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <a href="{{ \Illuminate\Support\Facades\Route::has('admin.dashboard') ? route('admin.dashboard') : '#' }}" class="flex items-center gap-3 px-3 {{ request()->routeIs('admin.dashboard') ? 'py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition">
+                                <svg class="w-4 h-4 {{ request()->routeIs('admin.dashboard') ? 'text-[#14532D]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
                                 </svg>
                                 <span>Dashboard</span>
                             </a>
                         </li>
                         <li>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <a href="{{ \Illuminate\Support\Facades\Route::has('admin.wilayah.index') ? route('admin.wilayah.index') : '#' }}" class="flex items-center gap-3 px-3 {{ request()->routeIs('admin.wilayah.*') ? 'py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition">
+                                <svg class="w-4 h-4 {{ request()->routeIs('admin.wilayah.*') ? 'text-[#14532D]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
                                 </svg>
                                 <span>Wilayah</span>
                             </a>
                         </li>
                         @php
-                            $isKategoriActive = request()->routeIs('admin.kategori.*', 'admin.aturan-penukaran.*', 'home');
+                            $isKategoriActive = request()->routeIs('admin.kategori.*', 'admin.aturan-penukaran.*');
                             $isVerifikasiActive = request()->routeIs('admin.verifikasi-warga.*');
                             $pendingWargaCount = \Illuminate\Support\Facades\Schema::hasTable('warga')
                                 ? \App\Models\Warga::menunggu()->count()
@@ -170,15 +170,31 @@
                 <span class="text-slate-900 font-semibold">@yield('breadcrumb_current', 'Kategori daur ulang')</span>
             </nav>
 
-            <!-- USER PROFILE INFO -->
+            <!-- USER PROFILE INFO & LOGOUT -->
             <div class="flex items-center gap-3">
+                @php
+                    $adminName = auth()->user()?->name ?? 'Admin TemJi';
+                    $adminInitials = collect(preg_split('/\s+/', trim($adminName)))
+                        ->filter()
+                        ->take(2)
+                        ->map(fn ($part) => strtoupper(mb_substr($part, 0, 1)))
+                        ->implode('') ?: 'AT';
+                @endphp
                 <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs tracking-wider">
-                    AT
+                    {{ $adminInitials }}
                 </div>
                 <div class="text-right">
-                    <div class="text-xs font-semibold text-slate-900 leading-tight">Admin TemJi</div>
+                    <div class="text-xs font-semibold text-slate-900 leading-tight">{{ $adminName }}</div>
                     <div class="text-[11px] text-slate-400 leading-tight">Pengelola</div>
                 </div>
+                @if(\Illuminate\Support\Facades\Route::has('logout'))
+                    <form method="POST" action="{{ route('logout') }}" class="ml-1">
+                        @csrf
+                        <button type="submit" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50 text-slate-600 hover:text-rose-700 font-medium text-xs transition cursor-pointer">
+                            Keluar
+                        </button>
+                    </form>
+                @endif
             </div>
         </header>
 
