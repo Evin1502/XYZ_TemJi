@@ -137,11 +137,11 @@
                             </a>
                         </li>
                         <li>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+                            <a href="{{ route('admin.analitik') }}" class="flex items-center gap-3 px-3 {{ request()->routeIs('admin.analitik*') ? 'py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/>
                                 </svg>
-                                <span>Laporan</span>
+                                <span>Laporan & Analitik</span>
                             </a>
                         </li>
                     </ul>
