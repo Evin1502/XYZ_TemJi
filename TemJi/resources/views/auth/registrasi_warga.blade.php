@@ -246,7 +246,7 @@
                                 <option value="">-- Pilih Wilayah Layanan (Sukapura / Sukabirus) --</option>
                                 @foreach($wilayahList as $wilayah)
                                     <option value="{{ $wilayah->id }}" {{ (string) old('wilayah_id') === (string) $wilayah->id ? 'selected' : '' }}>
-                                        {{ $wilayah->nama }} ({{ $wilayah->kode_wilayah }})
+                                        {{ $wilayah->nama }}
                                     </option>
                                 @endforeach
                             </select>
