@@ -129,7 +129,7 @@
                     <span class="px-3 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">Keuangan</span>
                     <ul class="mt-2 space-y-1">
                         <li>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+                            <a href="{{ route('admin.iuran.index') }}" class="flex items-center gap-3 px-3 {{ request()->routeIs('admin.iuran.*') ? 'py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
                                 </svg>
