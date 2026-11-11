@@ -18,16 +18,8 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Admin TemJi',
-            'email' => 'admin@temji.id',
-            'role' => 'admin',
-        ]);
-
-        $this->call([
-            WilayahSeeder::class,
-            KategoriDaurUlangSeeder::class,
-            WargaSeeder::class,
-            AturanPenukaranPoinSeeder::class,
+            'name' => 'Test User',
+            'email' => 'test@example.com',
         ]);
     }
 }
