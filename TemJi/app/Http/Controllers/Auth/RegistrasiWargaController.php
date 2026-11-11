@@ -39,6 +39,7 @@ class RegistrasiWargaController extends Controller
                 'email' => $request->email,
                 'role' => 'warga',
                 'password' => $request->password,
+                'wilayah_id' => $request->wilayah_id,
             ]);
 
             return Warga::create([

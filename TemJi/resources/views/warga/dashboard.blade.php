@@ -95,7 +95,7 @@
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 text-sky-800 text-xs font-semibold border border-sky-200">
-                    <span>Wilayah Layanan Aktif</span>
+                    <span>Wilayah: {{ Auth::user()->warga?->wilayah?->nama ?? Auth::user()->wilayah?->nama ?? 'Sukapura' }}</span>
                 </span>
             </div>
         </div>
@@ -118,6 +118,7 @@
                 <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Profil & Status</div>
                 <div class="text-base font-bold text-slate-900">{{ Auth::user()->role_label }}</div>
                 <p class="text-xs text-slate-500">Email: {{ Auth::user()->email }}</p>
+                <p class="text-xs text-slate-500">Wilayah: <span class="font-semibold text-slate-700">{{ Auth::user()->warga?->wilayah?->nama ?? Auth::user()->wilayah?->nama ?? 'Belum ditentukan' }}</span></p>
             </div>
         </div>
 
