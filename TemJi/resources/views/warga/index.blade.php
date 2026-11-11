@@ -3,21 +3,20 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">KK Warga</h4>
-    <a href="{{ route('warga.create') }}" class="btn btn-primary">+ Tambah KK</a>
 </div>
 
 @if ($jumlahBelumBerwilayah > 0)
     <div class="alert alert-warning d-flex justify-content-between align-items-center">
         <span><strong>{{ $jumlahBelumBerwilayah }}</strong> KK belum memiliki wilayah, statistik belum lengkap.</span>
-        <a href="{{ route('warga.index', ['belum_berwilayah' => 1]) }}" class="btn btn-sm btn-dark">Tampilkan yang belum berwilayah</a>
+        <a href="{{ route('admin.warga.index', ['belum_berwilayah' => 1]) }}" class="btn btn-sm btn-dark">Tampilkan yang belum berwilayah</a>
     </div>
 @endif
 
 @if (request()->boolean('belum_berwilayah'))
-    <a href="{{ route('warga.index') }}" class="btn btn-sm btn-outline-secondary mb-3">Tampilkan semua</a>
+    <a href="{{ route('admin.warga.index') }}" class="btn btn-sm btn-outline-secondary mb-3">Tampilkan semua</a>
 @endif
 
-<form action="{{ route('warga.bulk-assign') }}" method="POST">
+<form action="{{ route('admin.warga.bulk-assign') }}" method="POST">
     @csrf
     @if ($errors->has('warga_ids') || $errors->has('wilayah_id'))
         <div class="alert alert-danger">{{ $errors->first('warga_ids') ?: $errors->first('wilayah_id') }}</div>
@@ -44,7 +43,7 @@
             <tr>
                 <td><input type="checkbox" class="cek" name="warga_ids[]" value="{{ $g->id }}"></td>
                 <td>{{ $g->no_kk }}</td>
-                <td>{{ $g->nama_kepala_keluarga }}</td>
+                <td>{{ $g->nama_lengkap }}</td>
                 <td>
                     @if ($g->wilayah)
                         {{ $g->wilayah->nama }}
@@ -52,7 +51,7 @@
                         <span class="badge bg-danger">Belum diisi</span>
                     @endif
                 </td>
-                <td><a href="{{ route('warga.edit', $g) }}" class="btn btn-sm btn-warning">Ubah</a></td>
+                <td><a href="{{ route('admin.warga.edit', $g) }}" class="btn btn-sm btn-warning">Ubah</a></td>
             </tr>
         @empty
             <tr><td colspan="5" class="text-center">Belum ada data KK warga.</td></tr>
