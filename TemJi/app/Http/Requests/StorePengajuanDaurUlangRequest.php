@@ -62,6 +62,7 @@ class StorePengajuanDaurUlangRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'sudah_dipisah' => ['accepted'],
             'selected_items' => ['required', 'array', 'min:1'],
             'selected_items.*.kategori_id' => ['required', 'integer', 'exists:kategori_daur_ulang,id'],
             'selected_items.*.berat_kg' => ['required', 'integer', 'min:1', 'max:500'],
@@ -72,6 +73,7 @@ class StorePengajuanDaurUlangRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'sudah_dipisah.accepted' => 'Centang pernyataan bahwa daur ulang sudah dipisah per kategori.',
             'selected_items.required' => 'Pilih minimal satu kategori daur ulang yang akan disetor.',
             'selected_items.min' => 'Pilih minimal satu kategori daur ulang yang akan disetor.',
             'selected_items.*.kategori_id.exists' => 'Kategori daur ulang tidak valid.',

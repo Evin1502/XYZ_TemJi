@@ -7,6 +7,7 @@ use App\Models\PengajuanDaurUlang;
 use App\Models\PengajuanDaurUlangItem;
 use App\Models\RiwayatTarifPoin;
 use App\Models\User;
+use App\Models\Warga;
 use App\Models\Wilayah;
 use Carbon\Carbon;
 use Database\Seeders\KategoriDaurUlangSeeder;
@@ -81,6 +82,7 @@ class PengajuanDaurUlangTest extends TestCase
         $petBening = KategoriDaurUlang::where('nama', 'Botol PET bening')->first();
 
         $payload = [
+            'sudah_dipisah' => 1,
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 2],
                 $petBening->id => ['selected' => 1, 'berat_kg' => 3],
@@ -116,6 +118,7 @@ class PengajuanDaurUlangTest extends TestCase
 
         // Buat pengajuan pertama
         $this->post('/warga/daur-ulang', [
+            'sudah_dipisah' => 1,
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 1],
             ],
@@ -124,6 +127,7 @@ class PengajuanDaurUlangTest extends TestCase
 
         // Buat pengajuan kedua
         $this->post('/warga/daur-ulang', [
+            'sudah_dipisah' => 1,
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 2],
             ],
@@ -159,6 +163,7 @@ class PengajuanDaurUlangTest extends TestCase
     public function test_pengajuan_ditolak_jika_tidak_ada_kategori_yang_dipilih(): void
     {
         $response = $this->post('/warga/daur-ulang', [
+            'sudah_dipisah' => 1,
             'items' => [],
         ]);
 
@@ -173,6 +178,7 @@ class PengajuanDaurUlangTest extends TestCase
         $gelasNonaktif = KategoriDaurUlang::where('nama', 'Gelas plastik')->first();
 
         $response = $this->post('/warga/daur-ulang', [
+            'sudah_dipisah' => 1,
             'items' => [
                 $gelasNonaktif->id => ['selected' => 1, 'berat_kg' => 2],
             ],
@@ -189,6 +195,7 @@ class PengajuanDaurUlangTest extends TestCase
         $minyak = KategoriDaurUlang::where('nama', 'Minyak jelantah')->first();
 
         $response = $this->post('/warga/daur-ulang', [
+            'sudah_dipisah' => 1,
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 0],
             ],
@@ -205,6 +212,7 @@ class PengajuanDaurUlangTest extends TestCase
         $minyak = KategoriDaurUlang::where('nama', 'Minyak jelantah')->first();
 
         $this->post('/warga/daur-ulang', [
+            'sudah_dipisah' => 1,
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 5],
             ],
@@ -230,5 +238,95 @@ class PengajuanDaurUlangTest extends TestCase
         $response->assertSee('DU-2610-0214');
         $response->assertSee('Minyak jelantah ± 2 kg · Botol PET bening ± 3 kg');
         $response->assertSee('Konfirmasi Jadwal Penjemputan');
+    }
+
+    /**
+     * Test 11 (PBI 4): pengajuan tanpa pernyataan "sudah dipisah" ditolak.
+     */
+    public function test_pengajuan_tanpa_pernyataan_sudah_dipisah_ditolak(): void
+    {
+        $minyak = KategoriDaurUlang::where('nama', 'Minyak jelantah')->first();
+        $sebelum = PengajuanDaurUlang::count();
+
+        $response = $this->post('/warga/daur-ulang', [
+            'items' => [$minyak->id => ['selected' => 1, 'berat_kg' => 2]],
+        ]);
+
+        $response->assertSessionHasErrors(['sudah_dipisah']);
+        $this->assertSame($sebelum, PengajuanDaurUlang::count());
+    }
+
+    /**
+     * Test 12 (PBI 1/4): wilayah pengajuan mengikuti wilayah warga, bukan default Sukapura.
+     */
+    public function test_wilayah_pengajuan_mengikuti_wilayah_warga_sukabirus(): void
+    {
+        $sukabirus = Wilayah::where('nama', 'Sukabirus')->firstOrFail();
+        $user = User::create([
+            'name' => 'Warga Sukabirus', 'email' => 'warga.sukabirus@temji.test',
+            'role' => User::ROLE_WARGA, 'password' => 'password123',
+        ]);
+        Warga::create([
+            'user_id' => $user->id, 'nik' => '3273000000000021', 'no_kk' => '3273000000000821',
+            'nama_lengkap' => 'Warga Sukabirus', 'no_hp' => '081200000021',
+            'alamat' => 'Jl. Contoh No. 21', 'wilayah_id' => $sukabirus->id,
+            'status_verifikasi' => Warga::STATUS_TERVERIFIKASI,
+        ]);
+        $this->actingAs($user);
+
+        $minyak = KategoriDaurUlang::where('nama', 'Minyak jelantah')->first();
+        $this->post('/warga/daur-ulang', [
+            'sudah_dipisah' => 1,
+            'items' => [$minyak->id => ['selected' => 1, 'berat_kg' => 2]],
+        ])->assertSessionHasNoErrors();
+
+        $pengajuan = PengajuanDaurUlang::where('user_id', $user->id)->firstOrFail();
+        $this->assertSame($sukabirus->id, $pengajuan->wilayah_id);
+    }
+
+    /**
+     * Test 13 (PBI 1): warga yang wilayahnya belum lengkap tidak bisa mengajukan, dan tidak jatuh ke wilayah lain.
+     */
+    public function test_warga_tanpa_wilayah_tidak_bisa_mengajukan(): void
+    {
+        $user = User::create([
+            'name' => 'Warga Lama', 'email' => 'warga.lama@temji.test',
+            'role' => User::ROLE_WARGA, 'password' => 'password123',
+        ]);
+        Warga::create([
+            'user_id' => $user->id, 'nik' => '3273000000000022', 'no_kk' => '3273000000000822',
+            'nama_lengkap' => 'Warga Lama', 'no_hp' => '081200000022',
+            'alamat' => 'Alamat belum lengkap', 'wilayah_id' => null,
+            'status_verifikasi' => Warga::STATUS_TERVERIFIKASI,
+        ]);
+        $this->actingAs($user);
+
+        $minyak = KategoriDaurUlang::where('nama', 'Minyak jelantah')->first();
+        $response = $this->post('/warga/daur-ulang', [
+            'sudah_dipisah' => 1,
+            'items' => [$minyak->id => ['selected' => 1, 'berat_kg' => 2]],
+        ]);
+
+        $response->assertSessionHasErrors(['wilayah']);
+        $this->assertDatabaseMissing('pengajuan_daur_ulang', ['user_id' => $user->id]);
+    }
+
+    /**
+     * Test 14: warga tidak dapat membuka pengajuan milik warga lain lewat kode.
+     */
+    public function test_warga_tidak_bisa_membuka_pengajuan_milik_warga_lain(): void
+    {
+        $lain = User::create([
+            'name' => 'Warga Lain', 'email' => 'warga.lain@temji.test',
+            'role' => User::ROLE_WARGA, 'password' => 'password123',
+        ]);
+        $this->actingAs($lain);
+
+        // DU-2610-0214 milik Ratna (user di setUp)
+        $this->get('/warga/daur-ulang/DU-2610-0214/jadwal')->assertNotFound();
+
+        $this->get('/warga/daur-ulang?kode=DU-2610-0214')
+            ->assertOk()
+            ->assertDontSee('DU-2610-0214');
     }
 }

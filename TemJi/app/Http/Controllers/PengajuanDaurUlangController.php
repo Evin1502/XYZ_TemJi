@@ -5,11 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePengajuanDaurUlangRequest;
 use App\Models\KategoriDaurUlang;
 use App\Models\PengajuanDaurUlang;
-use App\Models\User;
-use App\Models\Wilayah;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -50,6 +47,7 @@ class PengajuanDaurUlangController extends Controller
         if ($kode) {
             $pengajuanTerkirim = PengajuanDaurUlang::with(['items.kategori', 'wilayah'])
                 ->where('kode_pengajuan', $kode)
+                ->where('user_id', $request->user()->id)   // hanya milik sendiri
                 ->first();
         }
 
@@ -67,9 +65,17 @@ class PengajuanDaurUlangController extends Controller
     {
         $selectedItems = $request->input('selected_items', []);
 
-        $pengajuan = DB::transaction(function () use ($request, $selectedItems) {
-            $user = Auth::user() ?? User::where('role', 'warga')->first();
-            $wilayahId = $user?->wilayah_id ?? Wilayah::where('nama', 'Sukapura')->value('id');
+        // Wilayah diambil dari data warga yang login (warga.wilayah_id), tanpa fallback ke wilayah lain.
+        $user = $request->user();
+        $wilayahId = $user->wilayah_id_efektif;
+
+        if (! $wilayahId) {
+            return redirect()->route('warga.daur-ulang.create')
+                ->withInput()
+                ->withErrors(['wilayah' => 'Wilayah Anda belum lengkap. Hubungi admin untuk melengkapi wilayah sebelum mengajukan daur ulang.']);
+        }
+
+        $pengajuan = DB::transaction(function () use ($request, $selectedItems, $user, $wilayahId) {
 
             $totalKg = 0;
             $totalPoin = 0;
@@ -94,7 +100,7 @@ class PengajuanDaurUlangController extends Controller
 
             $pengajuanBaru = PengajuanDaurUlang::create([
                 'kode_pengajuan' => PengajuanDaurUlang::generateKodePengajuan(),
-                'user_id' => $user?->id,
+                'user_id' => $user->id,
                 'wilayah_id' => $wilayahId,
                 'total_estimasi_kg' => $totalKg,
                 'total_estimasi_poin' => $totalPoin,
@@ -115,10 +121,11 @@ class PengajuanDaurUlangController extends Controller
     /**
      * Halaman lanjutan untuk memilih jadwal penjemputan.
      */
-    public function pilihJadwal(string $kode): View
+    public function pilihJadwal(Request $request, string $kode): View
     {
         $pengajuan = PengajuanDaurUlang::with(['items.kategori', 'wilayah'])
             ->where('kode_pengajuan', $kode)
+            ->where('user_id', $request->user()->id)   // pengajuan warga lain -> 404
             ->firstOrFail();
 
         return view('warga.daur-ulang.jadwal', compact('pengajuan'));

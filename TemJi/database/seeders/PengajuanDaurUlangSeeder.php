@@ -6,6 +6,7 @@ use App\Models\KategoriDaurUlang;
 use App\Models\PengajuanDaurUlang;
 use App\Models\PengajuanDaurUlangItem;
 use App\Models\User;
+use App\Models\Warga;
 use App\Models\Wilayah;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -26,7 +27,20 @@ class PengajuanDaurUlangSeeder extends Seeder
                 'name' => 'Ratna Warga',
                 'password' => Hash::make('password'),
                 'role' => 'warga',
+            ]
+        );
+
+        // Wilayah warga disimpan di tabel warga (sumber kebenaran), bukan di users.
+        Warga::updateOrCreate(
+            ['user_id' => $warga->id],
+            [
+                'nik' => '3273000000000011',
+                'no_kk' => '3273000000000811',
+                'nama_lengkap' => 'Ratna Warga',
+                'no_hp' => '081200000011',
+                'alamat' => 'Jl. Contoh No. 11, Sukapura',
                 'wilayah_id' => $sukapura?->id,
+                'status_verifikasi' => Warga::STATUS_TERVERIFIKASI,
             ]
         );
 

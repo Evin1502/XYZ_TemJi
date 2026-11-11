@@ -187,6 +187,14 @@
                     </p>
                 </div>
 
+                @if(!$pengajuanTerkirim)
+                    <label class="mt-4 mb-24 flex items-start gap-3 text-[13px] text-slate-700">
+                        <input type="checkbox" name="sudah_dipisah" value="1" {{ old('sudah_dipisah') ? 'checked' : '' }}
+                               class="mt-0.5 h-4 w-4 rounded border-slate-300 accent-[#1B5E3A]">
+                        <span>Saya menyatakan daur ulang ini sudah dipisah per kategori.</span>
+                    </label>
+                @endif
+
                 <!-- STICKY BOTTOM SUBMIT BAR (HANYA AKTIF SAAT PENGISIAN FORM) -->
                 @if(!$pengajuanTerkirim)
                     <div class="fixed bottom-0 inset-x-0 max-w-[430px] mx-auto bg-white/95 backdrop-blur-md border-t border-slate-100 px-5 py-3.5 z-30 flex items-center justify-between gap-4">
