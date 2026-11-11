@@ -58,7 +58,7 @@
             </div>
 
             <!-- FORM PENGAJUAN -->
-            <form id="formPengajuan" action="{{ route('pengajuan-daur-ulang.store') }}" method="POST">
+            <form id="formPengajuan" action="{{ route('warga.daur-ulang.store') }}" method="POST">
                 @csrf
 
                 <!-- LIST KATEGORI DAUR ULANG -->
@@ -251,7 +251,7 @@
                     </button>
 
                     <!-- TOMBOL PILIH JADWAL -->
-                    <a href="{{ route('pengajuan-daur-ulang.jadwal', $pengajuanTerkirim->kode_pengajuan) }}"
+                    <a href="{{ route('warga.daur-ulang.jadwal', $pengajuanTerkirim->kode_pengajuan) }}"
                        class="w-full py-3 px-4 bg-[#1B5E3A] hover:bg-[#14492C] text-white rounded-xl font-bold text-sm text-center transition active:scale-98 shadow-xs block flex items-center justify-center">
                         Pilih jadwal
                     </a>

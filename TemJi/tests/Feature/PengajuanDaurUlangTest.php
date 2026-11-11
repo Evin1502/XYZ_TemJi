@@ -18,6 +18,7 @@ use Tests\TestCase;
 class PengajuanDaurUlangTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Support\AuthAsRole;
 
     protected function setUp(): void
     {
@@ -28,6 +29,9 @@ class PengajuanDaurUlangTest extends TestCase
             KategoriDaurUlangSeeder::class,
             PengajuanDaurUlangSeeder::class,
         ]);
+
+        // Route kini di balik login warga: pakai akun warga dari PengajuanDaurUlangSeeder
+        $this->actingAs(User::where('email', 'warga@temji.test')->firstOrFail());
     }
 
     /**
@@ -35,7 +39,7 @@ class PengajuanDaurUlangTest extends TestCase
      */
     public function test_halaman_pengajuan_menampilkan_kategori_aktif_dan_tarif_poin_saat_ini(): void
     {
-        $response = $this->get('/pengajuan-daur-ulang');
+        $response = $this->get('/warga/daur-ulang');
 
         $response->assertOk();
         $response->assertSee('Ajukan daur ulang');
@@ -61,7 +65,7 @@ class PengajuanDaurUlangTest extends TestCase
      */
     public function test_kategori_nonaktif_tidak_ditampilkan_pada_halaman_pengajuan(): void
     {
-        $response = $this->get('/pengajuan-daur-ulang');
+        $response = $this->get('/warga/daur-ulang');
 
         $response->assertOk();
         $response->assertDontSee('Gelas plastik');
@@ -83,7 +87,7 @@ class PengajuanDaurUlangTest extends TestCase
             ],
         ];
 
-        $response = $this->post('/pengajuan-daur-ulang', $payload);
+        $response = $this->post('/warga/daur-ulang', $payload);
 
         $response->assertRedirect();
         $response->assertSessionHas('success', 'Pengajuan terkirim');
@@ -111,7 +115,7 @@ class PengajuanDaurUlangTest extends TestCase
         $minyak = KategoriDaurUlang::where('nama', 'Minyak jelantah')->first();
 
         // Buat pengajuan pertama
-        $this->post('/pengajuan-daur-ulang', [
+        $this->post('/warga/daur-ulang', [
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 1],
             ],
@@ -119,7 +123,7 @@ class PengajuanDaurUlangTest extends TestCase
         $p1 = PengajuanDaurUlang::orderByDesc('id')->first();
 
         // Buat pengajuan kedua
-        $this->post('/pengajuan-daur-ulang', [
+        $this->post('/warga/daur-ulang', [
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 2],
             ],
@@ -137,7 +141,7 @@ class PengajuanDaurUlangTest extends TestCase
     public function test_bottom_sheet_pengajuan_terkirim_tampil_dengan_kode_dan_ringkasan_item(): void
     {
         // Seeder sudah membuat contoh DU-2610-0214
-        $response = $this->get('/pengajuan-daur-ulang?kode=DU-2610-0214');
+        $response = $this->get('/warga/daur-ulang?kode=DU-2610-0214');
 
         $response->assertOk();
         $response->assertSee('Pengajuan terkirim');
@@ -154,7 +158,7 @@ class PengajuanDaurUlangTest extends TestCase
      */
     public function test_pengajuan_ditolak_jika_tidak_ada_kategori_yang_dipilih(): void
     {
-        $response = $this->post('/pengajuan-daur-ulang', [
+        $response = $this->post('/warga/daur-ulang', [
             'items' => [],
         ]);
 
@@ -168,7 +172,7 @@ class PengajuanDaurUlangTest extends TestCase
     {
         $gelasNonaktif = KategoriDaurUlang::where('nama', 'Gelas plastik')->first();
 
-        $response = $this->post('/pengajuan-daur-ulang', [
+        $response = $this->post('/warga/daur-ulang', [
             'items' => [
                 $gelasNonaktif->id => ['selected' => 1, 'berat_kg' => 2],
             ],
@@ -184,7 +188,7 @@ class PengajuanDaurUlangTest extends TestCase
     {
         $minyak = KategoriDaurUlang::where('nama', 'Minyak jelantah')->first();
 
-        $response = $this->post('/pengajuan-daur-ulang', [
+        $response = $this->post('/warga/daur-ulang', [
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 0],
             ],
@@ -200,7 +204,7 @@ class PengajuanDaurUlangTest extends TestCase
     {
         $minyak = KategoriDaurUlang::where('nama', 'Minyak jelantah')->first();
 
-        $this->post('/pengajuan-daur-ulang', [
+        $this->post('/warga/daur-ulang', [
             'items' => [
                 $minyak->id => ['selected' => 1, 'berat_kg' => 5],
             ],
@@ -219,7 +223,7 @@ class PengajuanDaurUlangTest extends TestCase
      */
     public function test_tombol_pilih_jadwal_membuka_halaman_jadwal_untuk_kode_pengajuan(): void
     {
-        $response = $this->get('/pengajuan-daur-ulang/DU-2610-0214/jadwal');
+        $response = $this->get('/warga/daur-ulang/DU-2610-0214/jadwal');
 
         $response->assertOk();
         $response->assertSee('Pilih jadwal penjemputan');

@@ -25,7 +25,7 @@
         <div>
             <!-- HEADER -->
             <div class="flex items-center gap-4 pb-4">
-                <a href="{{ route('pengajuan-daur-ulang.create', ['kode' => $pengajuan->kode_pengajuan]) }}"
+                <a href="{{ route('warga.daur-ulang.create', ['kode' => $pengajuan->kode_pengajuan]) }}"
                    class="w-11 h-11 rounded-2xl border border-slate-200 bg-white flex items-center justify-center text-slate-700 shadow-2xs hover:bg-slate-50 transition cursor-pointer"
                    aria-label="Kembali">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -88,7 +88,7 @@
 
         <!-- ACTION BUTTON -->
         <div class="pt-6">
-            <a href="{{ route('pengajuan-daur-ulang.create', ['kode' => $pengajuan->kode_pengajuan]) }}"
+            <a href="{{ route('warga.daur-ulang.create', ['kode' => $pengajuan->kode_pengajuan]) }}"
                class="w-full py-3.5 bg-[#1B5E3A] hover:bg-[#14492C] text-white rounded-xl font-bold text-sm text-center transition block shadow-xs active:scale-98">
                 Konfirmasi Jadwal Penjemputan
             </a>

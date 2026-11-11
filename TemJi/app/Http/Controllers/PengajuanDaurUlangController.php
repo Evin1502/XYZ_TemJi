@@ -107,7 +107,7 @@ class PengajuanDaurUlangController extends Controller
             return $pengajuanBaru;
         });
 
-        return redirect()->route('pengajuan-daur-ulang.create', ['kode' => $pengajuan->kode_pengajuan])
+        return redirect()->route('warga.daur-ulang.create', ['kode' => $pengajuan->kode_pengajuan])
             ->with('success', 'Pengajuan terkirim')
             ->with('submitted_kode', $pengajuan->kode_pengajuan);
     }
