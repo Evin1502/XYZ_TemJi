@@ -106,6 +106,7 @@
                 <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Jadwal Sampah Wilayah</div>
                 <div class="text-base font-bold text-slate-900">Jadwal Rutin Mingguan</div>
                 <p class="text-xs text-slate-500">Penjemputan sampah organik & anorganik lingkungan.</p>
+                <a href="{{ route('warga.jadwal.index') }}" class="inline-block text-xs font-semibold text-sky-700 hover:underline">Lihat jadwal & ajukan penjemputan tambahan &rarr;</a>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-2">
