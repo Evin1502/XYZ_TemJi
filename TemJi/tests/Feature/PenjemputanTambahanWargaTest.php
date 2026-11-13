@@ -190,9 +190,11 @@ class PenjemputanTambahanWargaTest extends TestCase
         auth()->logout();
         $this->get('/warga/jadwal')->assertRedirect('/login');
 
+        $jumlahAwal = PenjemputanTambahan::count();
+
         $this->actingAsAdmin();
         $this->get('/warga/jadwal')->assertRedirect(route('admin.dashboard'));
         $this->post('/warga/penjemputan-tambahan', $this->dataPengajuan())->assertRedirect(route('admin.dashboard'));
-        $this->assertSame(2, PenjemputanTambahan::count()); // tetap hanya dua data seeder
+        $this->assertSame($jumlahAwal, PenjemputanTambahan::count());
     }
 }

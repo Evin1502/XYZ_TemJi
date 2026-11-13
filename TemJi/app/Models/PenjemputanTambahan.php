@@ -30,10 +30,19 @@ class PenjemputanTambahan extends Model
         'tanggal_diminta',
         'alasan',
         'status',
+        'petugas_id',
+        'tanggal_jemput',
+        'jam_mulai',
+        'jam_selesai',
+        'alasan_penolakan',
+        'diproses_oleh',
+        'diproses_pada',
     ];
 
     protected $casts = [
         'tanggal_diminta' => 'date',
+        'tanggal_jemput'  => 'date',
+        'diproses_pada'   => 'datetime',
     ];
 
     // -------------------------------------------------------------------------
@@ -50,6 +59,18 @@ class PenjemputanTambahan extends Model
         return $this->belongsTo(Wilayah::class);
     }
 
+    /** Petugas yang ditugaskan saat pengajuan disetujui. */
+    public function petugas(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'petugas_id');
+    }
+
+    /** Admin yang menyetujui atau menolak pengajuan. */
+    public function pemroses(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'diproses_oleh');
+    }
+
     // -------------------------------------------------------------------------
     // Scopes
     // -------------------------------------------------------------------------
@@ -59,6 +80,16 @@ class PenjemputanTambahan extends Model
         return $query->where('status', self::STATUS_MENUNGGU);
     }
 
+    /**
+     * Penjemputan tambahan yang sudah disetujui dan dijadwalkan pada rentang tanggal tertentu.
+     */
+    public function scopeTerjadwalAntara(Builder $query, Carbon $awal, Carbon $akhir): Builder
+    {
+        return $query->where('status', self::STATUS_DISETUJUI)
+            ->whereDate('tanggal_jemput', '>=', $awal->toDateString())
+            ->whereDate('tanggal_jemput', '<=', $akhir->toDateString());
+    }
+
     // -------------------------------------------------------------------------
     // Helper
     // -------------------------------------------------------------------------
@@ -66,6 +97,48 @@ class PenjemputanTambahan extends Model
     public function isMenunggu(): bool
     {
         return $this->status === self::STATUS_MENUNGGU;
+    }
+
+    public function isDisetujui(): bool
+    {
+        return $this->status === self::STATUS_DISETUJUI;
+    }
+
+    /**
+     * Rentang jam jemput dengan format penulisan Indonesia, mis. "13.00–14.00".
+     */
+    public function getRentangWaktuAttribute(): ?string
+    {
+        if (! $this->jam_mulai || ! $this->jam_selesai) {
+            return null;
+        }
+
+        return JadwalPenjemputan::formatJam($this->jam_mulai) . '–' . JadwalPenjemputan::formatJam($this->jam_selesai);
+    }
+
+    /**
+     * Cek apakah petugas sudah bertugas pada tanggal dan jam tersebut, baik di jadwal rutin
+     * mingguan maupun di penjemputan tambahan lain yang sudah disetujui.
+     */
+    public static function petugasBentrok(
+        int $petugasId,
+        Carbon $tanggal,
+        string $jamMulai,
+        string $jamSelesai,
+        ?int $kecualiId = null,
+    ): bool {
+        if (JadwalPenjemputan::adaBentrok($petugasId, $tanggal->dayOfWeekIso, $jamMulai, $jamSelesai)) {
+            return true;
+        }
+
+        return self::query()
+            ->where('status', self::STATUS_DISETUJUI)
+            ->where('petugas_id', $petugasId)
+            ->whereDate('tanggal_jemput', $tanggal->toDateString())
+            ->where('jam_mulai', '<', JadwalPenjemputan::normalisasiJam($jamSelesai))
+            ->where('jam_selesai', '>', JadwalPenjemputan::normalisasiJam($jamMulai))
+            ->when($kecualiId, fn (Builder $q) => $q->whereKeyNot($kecualiId))
+            ->exists();
     }
 
     /**
