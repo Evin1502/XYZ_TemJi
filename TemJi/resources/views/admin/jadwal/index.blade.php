@@ -60,6 +60,7 @@
                 <div class="flex items-center gap-2 text-xs font-medium">
                     <span class="px-3 py-1 rounded-full bg-[#EBF7EE] text-[#14532D]">Sampah biasa</span>
                     <span class="px-3 py-1 rounded-full bg-[#E8F0FB] text-[#1E4E8C]">Daur ulang</span>
+                    <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-800">Tambahan</span>
                 </div>
             </div>
 
@@ -89,6 +90,14 @@
                                         <div class="text-xs leading-snug">{{ $jadwal->petugas->name }}</div>
                                     </div>
                                 @endif
+                            @endforeach
+
+                            @foreach($tambahanPerHari->get($kolom['hari'], collect()) as $tambahan)
+                                <div class="rounded-xl bg-amber-50 px-2.5 py-2 text-amber-800">
+                                    <div class="text-sm font-bold whitespace-nowrap">{{ $tambahan->rentang_waktu }}</div>
+                                    <div class="mt-0.5 text-xs leading-snug">Tambahan · {{ $tambahan->wilayah->nama }}</div>
+                                    <div class="text-xs leading-snug">{{ $tambahan->kode }} · {{ $tambahan->petugas?->name }}</div>
+                                </div>
                             @endforeach
                         </div>
                     @endforeach

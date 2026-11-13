@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreJadwalPenjemputanRequest;
 use App\Models\JadwalPenjemputan;
+use App\Models\PenjemputanTambahan;
 use App\Models\User;
 use App\Models\Wilayah;
 use Carbon\Carbon;
@@ -39,6 +40,14 @@ class JadwalPenjemputanController extends Controller
             ->get();
         $jadwalPerHari = $jadwalList->groupBy('hari');
 
+        // Penjemputan tambahan yang disetujui masuk ke jadwal petugas pada tanggalnya di minggu ini
+        $tambahanPerHari = PenjemputanTambahan::with(['wilayah', 'petugas'])
+            ->terjadwalAntara($senin, $sabtu)
+            ->when($wilayahId, fn ($q) => $q->where('wilayah_id', $wilayahId))
+            ->orderBy('jam_mulai')
+            ->get()
+            ->groupBy(fn (PenjemputanTambahan $p) => $p->tanggal_jemput->dayOfWeekIso);
+
         $petugasList = User::petugas()->orderBy('name')->get();
 
         return view('admin.jadwal.index', [
@@ -51,6 +60,7 @@ class JadwalPenjemputanController extends Controller
             'wilayahId' => $wilayahId,
             'jadwalList' => $jadwalList,
             'jadwalPerHari' => $jadwalPerHari,
+            'tambahanPerHari' => $tambahanPerHari,
             'petugasList' => $petugasList,
         ]);
     }

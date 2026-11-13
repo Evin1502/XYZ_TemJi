@@ -30,7 +30,7 @@ class JadwalWargaController extends Controller
                 ->groupBy('hari')
             : collect();
 
-        $riwayat = $user->penjemputanTambahan()->latest('id')->get();
+        $riwayat = $user->penjemputanTambahan()->with('petugas')->latest('id')->get();
 
         return view('warga.jadwal.index', [
             'wilayah' => $wilayahId ? Wilayah::find($wilayahId) : null,

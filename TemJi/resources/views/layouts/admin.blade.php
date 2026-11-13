@@ -98,16 +98,16 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.jadwal.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <a href="{{ route('admin.jadwal.index') }}" class="flex items-center gap-3 px-3 {{ request()->routeIs('admin.jadwal.*') ? 'py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition">
+                                <svg class="w-4 h-4 {{ request()->routeIs('admin.jadwal.*') ? 'text-[#14532D]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/>
                                 </svg>
                                 <span>Jadwal</span>
                             </a>
                         </li>
                         <li>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <a href="{{ route('admin.penjemputan-tambahan.index') }}" class="flex items-center gap-3 px-3 {{ request()->routeIs('admin.penjemputan-tambahan.*') ? 'py-2.5 rounded-xl bg-[#EBF7EE] text-[#14532D] font-semibold shadow-xs' : 'py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50' }} transition">
+                                <svg class="w-4 h-4 {{ request()->routeIs('admin.penjemputan-tambahan.*') ? 'text-[#14532D]' : 'text-slate-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><circle cx="7" cy="18" r="2"/><path d="M15 18H9"/><circle cx="17" cy="18" r="2"/><path d="M16 8h4l3 3v5h-7V8z"/>
                                 </svg>
                                 <span>Penjemputan Tambahan</span>

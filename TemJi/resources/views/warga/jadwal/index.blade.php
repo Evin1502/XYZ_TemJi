@@ -170,6 +170,13 @@
                             </div>
                             <div class="text-xs text-slate-500">Diminta untuk {{ $pengajuan->tanggal_diminta->locale('id')->translatedFormat('l, j F Y') }}</div>
                             <p class="text-xs text-slate-600 leading-relaxed">{{ $pengajuan->alasan }}</p>
+                            @if($pengajuan->isDisetujui() && $pengajuan->tanggal_jemput)
+                                <p class="text-xs font-semibold text-emerald-700">
+                                    Dijemput {{ $pengajuan->tanggal_jemput->locale('id')->translatedFormat('l, j F Y') }} pukul {{ $pengajuan->rentang_waktu }} oleh {{ $pengajuan->petugas?->name ?? 'petugas' }}
+                                </p>
+                            @elseif($pengajuan->alasan_penolakan)
+                                <p class="text-xs text-rose-700">Alasan penolakan: {{ $pengajuan->alasan_penolakan }}</p>
+                            @endif
                         </div>
 
                         @if($pengajuan->isMenunggu())
