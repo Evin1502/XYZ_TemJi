@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('total_dibayar', 12, 2); // Rp 10.000
             $table->date('jatuh_tempo');
             $table->enum('status', ['Belum dibayar', 'Lunas'])->default('Belum dibayar');
+            $table->string('bukti_transfer')->nullable();
             $table->timestamps();
         });
     }

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('wilayah');
             $table->decimal('nominal', 12, 2);
+            $table->unsignedInteger('rumah_tertagih')->default(0);
             $table->date('berlaku_sejak')->nullable();
             $table->timestamps();
         });

@@ -9,13 +9,18 @@ class IuranWilayah extends Model
 {
     use HasFactory;
 
-    // Arahkan ke nama tabel baru yang bersih
-    protected $table = 'iuran_wilayah';
+    protected $table = 'iuran_wilayahs';
 
     protected $fillable = [
         'wilayah',
         'nominal',
         'rumah_tertagih',
-        'berlaku_sejak'
+        'berlaku_sejak',
+    ];
+
+    protected $casts = [
+        'nominal'        => 'decimal:2',
+        'rumah_tertagih' => 'integer',
+        'berlaku_sejak'  => 'date',
     ];
 }

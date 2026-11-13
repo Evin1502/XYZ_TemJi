@@ -15,10 +15,9 @@
 <body class="bg-gray-50 text-gray-800 min-h-screen flex" 
       x-data="{ 
           pakaiPoin: true, 
-          metode: 'transfer', 
           fileName: '',
           nominalAwal: {{ isset($tagihanAktif) && $tagihanAktif ? $tagihanAktif->nominal_asal : 20000 }}, 
-          diskon: 10000, 
+          get diskon() { return Math.min(10000, this.nominalAwal * 0.5); }, 
           get total() { return this.pakaiPoin ? Math.max(0, this.nominalAwal - this.diskon) : this.nominalAwal; },
           formatRupiah(val) { return 'Rp ' + new Intl.NumberFormat('id-ID').format(val); }
       }">
@@ -140,7 +139,7 @@
                                     <span class="text-xs text-gray-400">Saldo 180 • Maksimal 50% tagihan</span>
                                 </div>
                                 <div class="flex items-center space-x-3">
-                                    <span class="text-xs font-semibold text-emerald-700" x-show="pakaiPoin" x-cloak>- Rp 10.000</span>
+                                    <span class="text-xs font-semibold text-emerald-700" x-show="pakaiPoin" x-text="'- ' + formatRupiah(diskon)" x-cloak></span>
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" name="pakai_poin" x-model="pakaiPoin" class="sr-only peer">
                                         <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-700"></div>
@@ -158,30 +157,26 @@
                         <!-- Form Pembayaran -->
                         <form action="{{ route('warga.iuran.bayar', $tagihanAktif->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4 pt-2">
                             @csrf
-                            <input type="hidden" name="metode_pembayaran" :value="metode">
+                            <input type="hidden" name="metode_pembayaran" value="transfer">
                             <input type="checkbox" name="pakai_poin" class="hidden" :checked="pakaiPoin">
-                            
-                            <!-- Tab Switching Metode Pembayaran -->
-                            <div class="grid grid-cols-2 p-1 bg-gray-100 rounded-xl text-xs font-medium">
-                                <button type="button" @click="metode = 'transfer'" :class="metode === 'transfer' ? 'bg-white text-gray-900 shadow-sm font-semibold' : 'text-gray-500 hover:text-gray-900'" class="py-2.5 rounded-lg transition text-center">
-                                    Transfer Bank
-                                </button>
-                                <button type="button" @click="metode = 'tunai'" :class="metode === 'tunai' ? 'bg-white text-gray-900 shadow-sm font-semibold' : 'text-gray-500 hover:text-gray-900'" class="py-2.5 rounded-lg transition text-center">
-                                    Tunai ke RT
-                                </button>
+
+                            <!-- Label Metode Pembayaran: Hanya Transfer Bank -->
+                            <div class="flex items-center space-x-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                                <svg class="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                <span class="text-xs font-semibold text-emerald-800">Pembayaran melalui Transfer Bank</span>
                             </div>
 
-                            <!-- Konten Transfer -->
-                            <div x-show="metode === 'transfer'" class="space-y-3" x-cloak>
+                            <!-- Form Upload Bukti Transfer -->
+                            <div class="space-y-3">
                                 <p class="text-xs text-gray-500">Silakan transfer ke rekening resmi kas RW: <strong class="text-gray-800">[NO. REKENING KAS RW]</strong></p>
-                                
-                                <label :class="!fileName ? 'border-red-300 bg-red-50/20' : 'border-emerald-500 bg-emerald-50/20'" class="border-2 border-dashed hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition text-center group">
+
+                                <label :class="!fileName ? 'border-dashed border-gray-300 bg-white' : 'border-emerald-500 bg-emerald-50/20'" class="border-2 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition text-center group">
                                     <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 group-hover:scale-110 transition">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                                     </div>
                                     <span class="text-sm font-bold text-gray-800" x-text="fileName ? fileName : 'Unggah bukti transfer (Wajib)'"></span>
                                     <span class="text-xs text-gray-400 mt-0.5">Format file: JPG, PNG (Maksimal 5 MB)</span>
-                                    <input type="file" name="bukti_transfer" class="hidden" :required="metode === 'transfer'" @change="fileName = $event.target.files[0]?.name">
+                                    <input type="file" name="bukti_transfer" class="hidden" required @change="fileName = $event.target.files[0]?.name">
                                 </label>
 
                                 @error('bukti_transfer')
@@ -189,17 +184,12 @@
                                 @enderror
                             </div>
 
-                            <!-- Konten Tunai -->
-                            <div x-show="metode === 'tunai'" class="p-4 bg-amber-50 border border-amber-200/60 rounded-xl text-xs text-amber-800 leading-relaxed" x-cloak>
-                                Pembayaran tunai sebesar <strong x-text="formatRupiah(total)"></strong> dapat langsung diserahkan kepada Ketua/Pengurus RT setempat.
-                            </div>
-
-                            <!-- Tombol Submit Disabled Jika Belum Upload Bukti Saat Transfer -->
-                            <button type="submit" 
-                                    :disabled="metode === 'transfer' && !fileName"
-                                    :class="(metode === 'transfer' && !fileName) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#1b5e3a] hover:bg-[#14492d] text-white active:scale-[0.99]'"
+                            <!-- Tombol Submit: Disabled jika bukti belum diunggah -->
+                            <button type="submit"
+                                    :disabled="!fileName"
+                                    :class="!fileName ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#1b5e3a] hover:bg-[#14492d] text-white active:scale-[0.99]'"
                                     class="w-full font-semibold py-3.5 px-4 rounded-xl transition shadow-md text-sm tracking-wide">
-                                Kirim & Selalu Verifikasi Pembayaran
+                                Kirim & Verifikasi Pembayaran
                             </button>
                         </form>
                     </div>

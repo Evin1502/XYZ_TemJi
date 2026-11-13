@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\IuranWilayah;
 use App\Models\TagihanIuran;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class IuranController extends Controller
 {
@@ -17,24 +19,36 @@ class IuranController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Ambil data nominal iuran wilayah Sukapura dari PBI 13
-        $iuranSukapura = IuranWilayah::where('wilayah', 'Sukapura')->first();
-        $nominal = $iuranSukapura ? $iuranSukapura->nominal : 20000;
+        $wilayahDipilih = $request->input('wilayah', []);
 
-        // 2. Terbitkan tagihan baru ke tabel PBI 14 (Sisi Warga)
-        TagihanIuran::create([
-            'nama_warga' => 'Dewi Lestari',
-            'wilayah' => 'Sukapura',
-            'bulan_tagihan' => 'Desember 2026', // Atau disesuaikan dengan input bulan
-            'nominal_asal' => $nominal,
-            'poin_digunakan' => 0,
-            'potongan_poin' => 0,
-            'total_dibayar' => $nominal,
-            'jatuh_tempo' => '2026-12-10',
-            'status' => 'Belum dibayar',
-        ]);
+        $daftarWilayah = !empty($wilayahDipilih)
+            ? IuranWilayah::whereIn('wilayah', $wilayahDipilih)->get()
+            : IuranWilayah::all();
 
-        return redirect()->back()->with('success', 'Berhasil menerbitkan tagihan iuran bulanan untuk warga!');
+        // Memastikan format jatuh_tempo valid untuk kolom DATE MySQL
+        try {
+            $jatuhTempo = $request->filled('jatuh_tempo')
+                ? Carbon::parse($request->jatuh_tempo)->format('Y-m-d')
+                : '2026-11-10';
+        } catch (\Exception $e) {
+            $jatuhTempo = '2026-11-10';
+        }
+
+        foreach ($daftarWilayah as $item) {
+            TagihanIuran::create([
+                'nama_warga'     => Auth::check() ? Auth::user()->name : 'Warga ' . $item->wilayah,
+                'wilayah'        => $item->wilayah,
+                'bulan_tagihan'  => $request->bulan_tagihan ?? 'November 2026',
+                'nominal_asal'   => $item->nominal,
+                'poin_digunakan' => 0,
+                'potongan_poin'  => 0,
+                'total_dibayar'  => $item->nominal,
+                'jatuh_tempo'    => $jatuhTempo,
+                'status'         => 'Belum dibayar',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Berhasil menerbitkan tagihan iuran bulanan untuk semua wilayah terpilih!');
     }
 
     public function update(Request $request, $id)
