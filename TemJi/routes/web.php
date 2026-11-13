@@ -5,6 +5,7 @@ use App\Http\Controllers\HomeRedirectController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeRedirectController::class)->name('home');
+Route::get('/demo/poin', [\App\Http\Controllers\Warga\PoinWargaController::class, 'index'])->name('warga.poin.demo');
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('guest');

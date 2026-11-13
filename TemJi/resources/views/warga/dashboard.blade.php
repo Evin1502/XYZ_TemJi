@@ -108,11 +108,16 @@
                 <p class="text-xs text-slate-500">Penjemputan sampah organik & anorganik lingkungan.</p>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-2">
-                <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Setoran Daur Ulang</div>
+            <a href="{{ route('warga.poin.index') }}" class="group block bg-white rounded-2xl border border-slate-200/80 hover:border-emerald-500 shadow-xs hover:shadow-md p-5 space-y-2 transition">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition">Setoran Daur Ulang</span>
+                    <span class="text-xs font-bold text-emerald-700 flex items-center gap-1 group-hover:translate-x-0.5 transition">
+                        Buka Poin &rarr;
+                    </span>
+                </div>
                 <div class="text-base font-bold text-emerald-700">Minyak Jelantah & Plastik</div>
-                <p class="text-xs text-slate-500">Kumpulkan poin dari setiap kilogram daur ulang.</p>
-            </div>
+                <p class="text-xs text-slate-500">Lihat saldo poin, panduan tarif daur ulang per kg, dan riwayat mutasi.</p>
+            </a>
 
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-2">
                 <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Profil & Status</div>
