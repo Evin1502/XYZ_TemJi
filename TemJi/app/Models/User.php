@@ -47,6 +47,11 @@ class User extends Authenticatable
         return $this->hasMany(PengajuanDaurUlang::class);
     }
 
+    public function penjemputanTambahan(): HasMany
+    {
+        return $this->hasMany(PenjemputanTambahan::class);
+    }
+
     // Scope (scopeWarga milik Daffa diganti nama agar tidak bentrok dengan relasi warga())
     public function scopePetugas(Builder $q): Builder   { return $q->where('role', self::ROLE_PETUGAS); }
     public function scopeRoleWarga(Builder $q): Builder { return $q->where('role', self::ROLE_WARGA); }

@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             JadwalPenjemputanSeeder::class,      // Rifka
             PengajuanDaurUlangSeeder::class,     // Daffa
             IuranWilayahSeeder::class,           // Shafina
+            PenjemputanTambahanSeeder::class,    // Rifka (PBI 08)
         ];
 
         $this->call(array_values(array_filter($urutan, 'class_exists')));
