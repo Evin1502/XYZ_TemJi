@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Warga extends Model
 {
@@ -26,12 +29,14 @@ class Warga extends Model
         'wilayah_id',
         'foto_identitas',
         'status_verifikasi',
+        'saldo_poin',
         'catatan_verifikasi',
         'diverifikasi_oleh',
         'diverifikasi_pada',
     ];
 
     protected $casts = [
+        'saldo_poin' => 'integer',
         'diverifikasi_pada' => 'datetime',
     ];
 
@@ -57,6 +62,71 @@ class Warga extends Model
     public function verifikator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'diverifikasi_oleh');
+    }
+
+    /**
+     * Rekam jejak seluruh transaksi mutasi poin milik warga ini.
+     */
+    public function riwayatPoin(): HasMany
+    {
+        return $this->hasMany(RiwayatPoin::class, 'warga_id')->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * Tambah saldo poin warga dan catat transaksi masuk pada ledger riwayat_poin.
+     */
+    public function tambahPoin(
+        int $poin,
+        string $judul,
+        ?string $keterangan = null,
+        ?string $kodePengajuan = null,
+        ?int $kategoriId = null,
+        ?float $beratKg = null,
+        ?Carbon $tanggal = null
+    ): RiwayatPoin {
+        return DB::transaction(function () use ($poin, $judul, $keterangan, $kodePengajuan, $kategoriId, $beratKg, $tanggal) {
+            $this->increment('saldo_poin', $poin);
+            $this->refresh();
+
+            return $this->riwayatPoin()->create([
+                'jenis' => 'masuk',
+                'jumlah_poin' => $poin,
+                'saldo_akhir' => $this->saldo_poin,
+                'judul' => $judul,
+                'keterangan' => $keterangan,
+                'kode_pengajuan' => $kodePengajuan,
+                'kategori_id' => $kategoriId,
+                'berat_kg' => $beratKg,
+                'created_at' => $tanggal ?? Carbon::now(),
+                'updated_at' => $tanggal ?? Carbon::now(),
+            ]);
+        });
+    }
+
+    /**
+     * Kurangi saldo poin warga dan catat transaksi keluar (potongan iuran) pada ledger riwayat_poin.
+     */
+    public function kurangiPoin(
+        int $poin,
+        string $judul,
+        ?string $keterangan = null,
+        ?Carbon $tanggal = null
+    ): RiwayatPoin {
+        return DB::transaction(function () use ($poin, $judul, $keterangan, $tanggal) {
+            $potonganSebenarnya = min($this->saldo_poin, $poin);
+            $this->decrement('saldo_poin', $potonganSebenarnya);
+            $this->refresh();
+
+            return $this->riwayatPoin()->create([
+                'jenis' => 'keluar',
+                'jumlah_poin' => $poin,
+                'saldo_akhir' => $this->saldo_poin,
+                'judul' => $judul,
+                'keterangan' => $keterangan,
+                'created_at' => $tanggal ?? Carbon::now(),
+                'updated_at' => $tanggal ?? Carbon::now(),
+            ]);
+        });
     }
 
     /**
